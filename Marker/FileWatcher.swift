@@ -51,7 +51,7 @@ class FileWatcher {
         }
 
         self.stream = stream
-        FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
         FSEventStreamStart(stream)
         NSLog("Marker: watching \(directory.path)")
     }
