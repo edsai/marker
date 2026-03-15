@@ -29,6 +29,15 @@ class TabBarView: NSView {
         setupViews()
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        // Update tab button appearances
+        for (tabId, button) in tabButtons {
+            button.setActive(tabId == activeTabId)
+        }
+    }
+
     private func setupViews() {
         wantsLayer = true
         layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor

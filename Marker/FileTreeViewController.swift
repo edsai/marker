@@ -24,9 +24,7 @@ class FileTreeViewController: NSViewController, NSOutlineViewDataSource, NSOutli
     }
 
     override func loadView() {
-        let container = NSView()
-        container.wantsLayer = true
-        container.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        let container = AppearanceAwareView(color: .controlBackgroundColor)
 
         outlineView = NSOutlineView()
         outlineView.headerView = nil

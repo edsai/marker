@@ -21,6 +21,11 @@ class StatusBarView: NSView {
         setupViews()
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+    }
+
     private func setupViews() {
         wantsLayer = true
         layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
