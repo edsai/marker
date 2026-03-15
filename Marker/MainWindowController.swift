@@ -103,10 +103,9 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
         // Min/max enforced only through NSSplitViewDelegate methods.
     }
 
-    override func windowDidLoad() {
-        super.windowDidLoad()
-        // Defer divider positioning to next run loop tick so the layout engine
-        // has resolved the split view's frame (it may be zero at windowDidLoad time)
+    /// Call after showWindow to set initial divider positions.
+    /// windowDidLoad is NOT called for programmatically created windows.
+    func setInitialDividerPositions() {
         DispatchQueue.main.async { [self] in
             splitView.setPosition(220, ofDividerAt: 0)
             splitView.setPosition(splitView.frame.width - 220, ofDividerAt: 1)

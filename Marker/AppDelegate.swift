@@ -42,6 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         }
 
         windowController.showWindow(nil)
+        windowController.setInitialDividerPositions()
         windowController.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
     }
