@@ -10,6 +10,41 @@ protocol EditorDelegate: AnyObject {
     func editor(didPasteImage tabId: String, base64: String, fileExtension: String)
 }
 
+/// WKWebView subclass that intercepts file drops before the contenteditable area gets them.
+/// Without this, dropping a file onto a ProseMirror line triggers a text-drop insertion
+/// instead of opening the file as a tab.
+class EditorWebView: WKWebView {
+    var onFileDrop: (([URL]) -> Void)?
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if hasFileURLs(sender) { return .copy }
+        return super.draggingEntered(sender)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        let urls = fileURLs(from: sender)
+        if !urls.isEmpty {
+            onFileDrop?(urls)
+            return true
+        }
+        return super.performDragOperation(sender)
+    }
+
+    private func hasFileURLs(_ info: NSDraggingInfo) -> Bool {
+        return info.draggingPasteboard.canReadObject(forClasses: [NSURL.self],
+                                                      options: [.urlReadingFileURLsOnly: true])
+    }
+
+    private func fileURLs(from info: NSDraggingInfo) -> [URL] {
+        guard let urls = info.draggingPasteboard.readObjects(forClasses: [NSURL.self],
+                                                              options: [.urlReadingFileURLsOnly: true]) as? [URL] else {
+            return []
+        }
+        let supported = ["md", "markdown", "mdown", "txt"]
+        return urls.filter { supported.contains($0.pathExtension.lowercased()) }
+    }
+}
+
 class EditorWebViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
     private(set) var webView: WKWebView!
     private(set) var bridge: MarkerBridge!
@@ -29,11 +64,17 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         contentController.add(handler, name: "marker")
         config.userContentController = contentController
 
-        let wv = WKWebView(frame: .zero, configuration: config)
+        let wv = EditorWebView(frame: .zero, configuration: config)
         wv.navigationDelegate = self
         wv.uiDelegate = self
         wv.wantsLayer = true
         wv.layer?.backgroundColor = NSColor.black.cgColor
+        wv.registerForDraggedTypes([.fileURL])
+        wv.onFileDrop = { urls in
+            for url in urls {
+                (NSApp.delegate as? AppDelegate)?.openFile(path: url.path)
+            }
+        }
 
         webView = wv
         bridge = MarkerBridge(webView: wv)
