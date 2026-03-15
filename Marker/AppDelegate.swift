@@ -226,8 +226,54 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     }
 
     func editor(didPasteImage tabId: String, base64: String, fileExtension: String) {
-        // Used by B7 (image save) — log for now
-        NSLog("Marker: image pasted in \(tabId)")
+        // Decode base64 image data and save to .marker-assets/ beside the open file
+        guard let imageData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) else {
+            NSLog("Marker: image paste — invalid base64 data for tab \(tabId)")
+            return
+        }
+
+        // Determine the document directory for this tab
+        let filePath = windowController.tabManager.tab(for: tabId)?.filePath
+        let documentDir: String
+        if let path = filePath {
+            documentDir = (path as NSString).deletingLastPathComponent
+        } else {
+            // No file path (unsaved tab) — use a temporary directory
+            documentDir = NSTemporaryDirectory()
+        }
+
+        // Create .marker-assets/ directory if needed
+        let assetsDir = (documentDir as NSString).appendingPathComponent(".marker-assets")
+        do {
+            try FileManager.default.createDirectory(
+                atPath: assetsDir,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+        } catch {
+            NSLog("Marker: image paste — failed to create assets dir: \(error)")
+            return
+        }
+
+        // Build a unique filename and write the image
+        let uuid = UUID().uuidString
+        let ext = fileExtension.isEmpty ? "png" : fileExtension
+        let filename = "\(uuid).\(ext)"
+        let imagePath = (assetsDir as NSString).appendingPathComponent(filename)
+
+        do {
+            try imageData.write(to: URL(fileURLWithPath: imagePath), options: .atomic)
+        } catch {
+            NSLog("Marker: image paste — failed to write image: \(error)")
+            return
+        }
+
+        let markerURL = "marker-file://\(imagePath)"
+        NSLog("Marker: image pasted in \(tabId), saved to \(imagePath)")
+
+        // TODO(B7): call bridge to insert the image into the editor at cursor position
+        // e.g. windowController.editorVC?.bridge.insertImage(tabId: tabId, url: markerURL)
+        _ = markerURL  // suppress unused-variable warning until wired
     }
 
     // MARK: - Menu Actions
