@@ -7,15 +7,48 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B1C47E0271C39F491582413 /* TabManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68305DCB6293C4D86CCCF1CE /* TabManagerTests.swift */; };
+		1224E51E32C936CD58B63104 /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAA735FBB2A846ADA887D67 /* TabBarView.swift */; };
+		38930523DDB89E9F3D6D3059 /* TabManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05476AB22007C99513939FD /* TabManager.swift */; };
 		751B52DD314B20E8FBDBFB58 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFE00314F636B96E041D69FD /* main.swift */; };
+		8A7DD86BC6697B65E4C16F94 /* MarkerBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11149E741A68525959D31440 /* MarkerBridge.swift */; };
+		A12E189F5368CC47B9734A5A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1BEDC717D9BBACECB8D5EF /* MainWindowController.swift */; };
+		A894FD4EE843FF9EE3EC1464 /* FileTreeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B778882F87AE121D2DE618 /* FileTreeViewController.swift */; };
+		B3DE63FFBA80008B20C68B26 /* OutlineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF3996B75AAB6A48876833A7 /* OutlineViewController.swift */; };
+		C008BD2CBAF832774EEDCBB8 /* SidebarPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 770DC80183730C723FA985CF /* SidebarPlaceholderView.swift */; };
 		CDEE81672D3C69789455BAE2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 927203E14146C707ED6DF35B /* AppDelegate.swift */; };
+		F17BAF3EB7AB8754D2D13B00 /* EditorWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A178DBEEE70C788A5E79B /* EditorWebViewController.swift */; };
+		F3EA349A8A8E5210525F8AD6 /* FileNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2BEAFA38CF33208623EEFC /* FileNode.swift */; };
+		F7245FE7EAD1A6FD3FCBA93C /* MarkerSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D753F171491B7686CAE32385 /* MarkerSchemeHandler.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B83557D0EAF65DCCAD434C1D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9B50577438AB843812B3FD39 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 890D07BF01D35BBD9B452B22;
+			remoteInfo = Marker;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		11149E741A68525959D31440 /* MarkerBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkerBridge.swift; sourceTree = "<group>"; };
+		2B2BEAFA38CF33208623EEFC /* FileNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileNode.swift; sourceTree = "<group>"; };
+		492A178DBEEE70C788A5E79B /* EditorWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebViewController.swift; sourceTree = "<group>"; };
+		5C1BEDC717D9BBACECB8D5EF /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		624E30132E40B5140B80FD2E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		68305DCB6293C4D86CCCF1CE /* TabManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerTests.swift; sourceTree = "<group>"; };
 		6E59A6366F9B55652046DEE9 /* Marker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71055F046DFB8EE9DC994F43 /* Marker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Marker.entitlements; sourceTree = "<group>"; };
+		770DC80183730C723FA985CF /* SidebarPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarPlaceholderView.swift; sourceTree = "<group>"; };
+		90B778882F87AE121D2DE618 /* FileTreeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTreeViewController.swift; sourceTree = "<group>"; };
 		927203E14146C707ED6DF35B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B05476AB22007C99513939FD /* TabManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManager.swift; sourceTree = "<group>"; };
+		B2382CD85835D762BEE05541 /* MarkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAAA735FBB2A846ADA887D67 /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
+		D753F171491B7686CAE32385 /* MarkerSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkerSchemeHandler.swift; sourceTree = "<group>"; };
+		DF3996B75AAB6A48876833A7 /* OutlineViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineViewController.swift; sourceTree = "<group>"; };
 		DFE00314F636B96E041D69FD /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -24,17 +57,36 @@
 			isa = PBXGroup;
 			children = (
 				927203E14146C707ED6DF35B /* AppDelegate.swift */,
+				492A178DBEEE70C788A5E79B /* EditorWebViewController.swift */,
+				2B2BEAFA38CF33208623EEFC /* FileNode.swift */,
+				90B778882F87AE121D2DE618 /* FileTreeViewController.swift */,
 				624E30132E40B5140B80FD2E /* Info.plist */,
 				DFE00314F636B96E041D69FD /* main.swift */,
+				5C1BEDC717D9BBACECB8D5EF /* MainWindowController.swift */,
 				71055F046DFB8EE9DC994F43 /* Marker.entitlements */,
+				11149E741A68525959D31440 /* MarkerBridge.swift */,
+				D753F171491B7686CAE32385 /* MarkerSchemeHandler.swift */,
+				DF3996B75AAB6A48876833A7 /* OutlineViewController.swift */,
+				770DC80183730C723FA985CF /* SidebarPlaceholderView.swift */,
+				BAAA735FBB2A846ADA887D67 /* TabBarView.swift */,
+				B05476AB22007C99513939FD /* TabManager.swift */,
 			);
 			path = Marker;
+			sourceTree = "<group>";
+		};
+		8A911A771700584D35AA7FD8 /* MarkerTests */ = {
+			isa = PBXGroup;
+			children = (
+				68305DCB6293C4D86CCCF1CE /* TabManagerTests.swift */,
+			);
+			path = MarkerTests;
 			sourceTree = "<group>";
 		};
 		EE4422476AAEB333C55A4714 = {
 			isa = PBXGroup;
 			children = (
 				03AF1E9C70ED8DC2685BEEB2 /* Marker */,
+				8A911A771700584D35AA7FD8 /* MarkerTests */,
 				EFE1D21C21A0A936EC2F2EC3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				6E59A6366F9B55652046DEE9 /* Marker.app */,
+				B2382CD85835D762BEE05541 /* MarkerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -67,6 +120,24 @@
 			productName = Marker;
 			productReference = 6E59A6366F9B55652046DEE9 /* Marker.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B220BD7169290F8B77BF320F /* MarkerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6040BF05BCB8295488A470D /* Build configuration list for PBXNativeTarget "MarkerTests" */;
+			buildPhases = (
+				C7F54C134808811A5FE32C8F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CF3E25CA2464469D92DCB676 /* PBXTargetDependency */,
+			);
+			name = MarkerTests;
+			packageProductDependencies = (
+			);
+			productName = MarkerTests;
+			productReference = B2382CD85835D762BEE05541 /* MarkerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -97,6 +168,7 @@
 			projectRoot = "";
 			targets = (
 				890D07BF01D35BBD9B452B22 /* Marker */,
+				B220BD7169290F8B77BF320F /* MarkerTests */,
 			);
 		};
 /* End PBXProject section */
@@ -129,13 +201,57 @@
 			buildActionMask = 2147483647;
 			files = (
 				CDEE81672D3C69789455BAE2 /* AppDelegate.swift in Sources */,
+				F17BAF3EB7AB8754D2D13B00 /* EditorWebViewController.swift in Sources */,
+				F3EA349A8A8E5210525F8AD6 /* FileNode.swift in Sources */,
+				A894FD4EE843FF9EE3EC1464 /* FileTreeViewController.swift in Sources */,
+				A12E189F5368CC47B9734A5A /* MainWindowController.swift in Sources */,
+				8A7DD86BC6697B65E4C16F94 /* MarkerBridge.swift in Sources */,
+				F7245FE7EAD1A6FD3FCBA93C /* MarkerSchemeHandler.swift in Sources */,
+				B3DE63FFBA80008B20C68B26 /* OutlineViewController.swift in Sources */,
+				C008BD2CBAF832774EEDCBB8 /* SidebarPlaceholderView.swift in Sources */,
+				1224E51E32C936CD58B63104 /* TabBarView.swift in Sources */,
+				38930523DDB89E9F3D6D3059 /* TabManager.swift in Sources */,
 				751B52DD314B20E8FBDBFB58 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7F54C134808811A5FE32C8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B1C47E0271C39F491582413 /* TabManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		CF3E25CA2464469D92DCB676 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 890D07BF01D35BBD9B452B22 /* Marker */;
+			targetProxy = B83557D0EAF65DCCAD434C1D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		2242FC3D2CD4F3A858AE4FE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marker.MarkerTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marker.app/Contents/MacOS/Marker";
+			};
+			name = Release;
+		};
 		3B06E69974E7BBDA24D621EA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -175,6 +291,24 @@
 				PRODUCT_NAME = Marker;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		91287CE0B715644F4B1012E5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marker.MarkerTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marker.app/Contents/MacOS/Marker";
 			};
 			name = Debug;
 		};
@@ -314,6 +448,15 @@
 			buildConfigurations = (
 				6B75CAB29385B326549CDD47 /* Debug */,
 				3B06E69974E7BBDA24D621EA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D6040BF05BCB8295488A470D /* Build configuration list for PBXNativeTarget "MarkerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				91287CE0B715644F4B1012E5 /* Debug */,
+				2242FC3D2CD4F3A858AE4FE7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

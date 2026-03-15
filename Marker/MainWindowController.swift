@@ -6,7 +6,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
     private let splitView = NSSplitView()
     let fileTreeVC = FileTreeViewController()
     let centerContainer = NSView()  // Public for B3 webview swap
-    private let rightSidebar = SidebarPlaceholderView(title: "Outline")
+    let outlineVC = OutlineViewController()
     private let statusBar = NSTextField(labelWithString: "")
 
     // EditorWebViewController whose view is embedded in centerContainer.
@@ -25,6 +25,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
                 editorView.leadingAnchor.constraint(equalTo: centerContainer.leadingAnchor),
                 editorView.trailingAnchor.constraint(equalTo: centerContainer.trailingAnchor),
             ])
+            outlineVC.bridge = editorVC.bridge
         }
     }
 
@@ -66,11 +67,11 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
 
         fileTreeVC.view.translatesAutoresizingMaskIntoConstraints = false
         centerContainer.translatesAutoresizingMaskIntoConstraints = false
-        rightSidebar.translatesAutoresizingMaskIntoConstraints = false
+        outlineVC.view.translatesAutoresizingMaskIntoConstraints = false
 
         splitView.addArrangedSubview(fileTreeVC.view)
         splitView.addArrangedSubview(centerContainer)
-        splitView.addArrangedSubview(rightSidebar)
+        splitView.addArrangedSubview(outlineVC.view)
 
         contentView.addSubview(splitView)
 
@@ -147,7 +148,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
     }
 
     func toggleRightSidebar() {
-        let isCollapsed = splitView.isSubviewCollapsed(rightSidebar)
+        let isCollapsed = splitView.isSubviewCollapsed(outlineVC.view)
         let pos = isCollapsed ? splitView.bounds.width - 220 : splitView.bounds.width
         splitView.setPosition(pos, ofDividerAt: 1)
     }
@@ -155,7 +156,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
     // MARK: - NSSplitViewDelegate
 
     func splitView(_ splitView: NSSplitView, canCollapseSubview subview: NSView) -> Bool {
-        return subview === fileTreeVC.view || subview === rightSidebar
+        return subview === fileTreeVC.view || subview === outlineVC.view
     }
 
     func splitView(_ splitView: NSSplitView, shouldCollapseSubview subview: NSView, forDoubleClickOnDividerAt dividerIndex: Int) -> Bool {
@@ -203,6 +204,8 @@ extension MainWindowController: TabManagerDelegate {
     func tabManager(_ manager: TabManager, didSwitchTo tab: Tab) {
         tabBarView.setActiveTab(id: tab.id)
         editorVC?.bridge.switchTab(id: tab.id)
+        outlineVC.activeTabId = tab.id
+        outlineVC.refreshHeadings(webView: editorVC?.webView)
     }
 
     func tabManager(_ manager: TabManager, didClose tab: Tab) {
@@ -216,6 +219,8 @@ extension MainWindowController: TabManagerDelegate {
 
     func tabManager(_ manager: TabManager, didUpdateDirty tab: Tab) {
         tabBarView.updateDirty(id: tab.id, isDirty: tab.isDirty)
+        // Refresh outline when content changes
+        outlineVC.refreshHeadings(webView: editorVC?.webView)
     }
 }
 
