@@ -3,101 +3,121 @@
 ## What This Is
 
 Native macOS hybrid app: Swift/AppKit shell + WKWebView hosting Milkdown Crepe editor.
-Replaces the Tauri version at `/Users/esaipetch/devwork/marker`.
+Replaces the Tauri version at `/Users/esaipetch/devwork/marker` (archived).
 
 ## Two-Repo Relationship
 
-- **`/Users/esaipetch/devwork/marker`** — The original Tauri app. **Source of truth for all editor TypeScript.** Contains Svelte components (App.svelte, FileTree, FindReplace, Outline, StatusBar, Preferences) that are Tauri-only and will NOT be used in the Swift app.
-- **`/Users/esaipetch/devwork/marker-swift`** — The new native Swift shell. Only the Vite webview bundle (`marker/dist-editor/`) crosses into this repo at `Marker/Resources/`.
+- **`/Users/esaipetch/devwork/marker`** — ARCHIVED Tauri app. **Source of truth for editor TypeScript only.** JS changes are made here, rebuilt via Vite, and copied to marker-swift.
+- **`/Users/esaipetch/devwork/marker-swift`** — The native Swift app. All UI is native AppKit. The Vite webview bundle (`marker/dist-editor/`) lives at `Marker/Resources/`.
 
-**Files in `marker/` that are webview-relevant (carried into Swift app):**
-- `src/lib/editor/webview-entry.ts` — bridge API
+**Files in `marker/` that are webview-relevant:**
+- `src/lib/editor/webview-entry.ts` — bridge API (marker.* methods)
 - `src/lib/editor/TabPool.ts` — LRU editor pool
 - `src/lib/plugins/search.ts` — ProseMirror find/replace
 - `src/lib/plugins/crepe-mermaid.ts` — mermaid rendering
-- `src/lib/plugins/mermaid.ts` — mermaid cache
-
-**Files in `marker/` that are Tauri/Svelte-only (replaced by Swift):**
-- `src/App.svelte`, all `.svelte` components, `src/lib/stores/*.ts`
 
 ## Current State (as of 2026-03-15)
 
-**Working:**
-- NSWindow launches with WKWebView
-- Milkdown editor renders inside WKWebView
-- JS bridge works bidirectionally (evaluateJavaScript + postMessage)
-- Welcome tab auto-opens showing editable markdown
-- Cursor change events flow from JS → Swift
-- Build succeeds via `xcodebuild`
+**All Part B issues (B2–B11) are complete.** The app is feature-complete and installed at `/Applications/Marker.app`.
 
-**Not working yet:**
-- MessageHandler in AppDelegate.swift is a **stub** — all postMessage types are logged but not acted on. B2+ issues need real Swift handlers for: dirty, cursorChanged, markdown, evicted, imagePaste, ready.
+**Working features:**
+- 3-pane NSSplitView: file tree | editor | outline
+- Custom tab bar with dirty indicator, close, add
+- Native Find & Replace (Cmd+F, Cmd+G, Cmd+Opt+F)
+- File I/O with encoding detection (UTF-8, UTF-8 BOM, Latin-1) and line ending preservation (LF/CRLF)
+- FSEvents file watching with 500ms debounce
+- Session persistence to ~/Library/Application Support/Marker/
+- File conflict alerts for dirty tabs, orphan marking for deleted files
+- Native preferences (font size, font family, theme, auto-save)
+- Dark/Light/System theme switching
+- WKWebView crash recovery
+- Native menu bar with full keyboard shortcuts
+- Drag-and-drop .md files to open
+- Image paste saves to .marker-assets/ and inserts markdown
+- marker-file:// URL scheme for local images
+- File > Open Recent with history
+- Reopen closed tab (Cmd+Shift+T)
+- Quit save prompt (Save All / Quit Without Saving / Cancel)
+- Word count in status bar
+- Context menu: New File, Rename, Delete, Reveal in Finder, Copy Path
 
 **Architecture (LOCKED — do not change these decisions):**
-- **Single WKWebView** — TabPool.ts manages multiple Crepe instances inside one WebView via display:none/block
-- **Custom tab bar** (NSView subclass) — NOT NSWindow.tabbingMode (which creates separate windows)
-- **Swift→JS:** `webView.callAsyncJavaScript("await marker.xxx(args)", arguments: [...], in: nil, in: .page)` — all marker.* functions are async; `evaluateJavaScript` fails with "unsupported type" on Promises. Use `callAsyncJavaScript` for all Swift→JS calls. Use `evaluateJavaScript` only for sync checks like `typeof window.marker`.
+- **Single WKWebView** — TabPool.ts manages multiple Crepe instances via display:none/block
+- **Custom tab bar** (NSView subclass) — NOT NSWindow.tabbingMode
+- **Swift→JS:** `webView.callAsyncJavaScript("await marker.xxx(args)", arguments: [...], in: nil, in: .page)` — all marker.* functions are async; `evaluateJavaScript` fails with "unsupported type" on Promises. Use `evaluateJavaScript` only for sync DOM queries.
 - **JS→Swift:** `window.webkit.messageHandlers.marker.postMessage({type, ...})`
 - **getMarkdown uses callback pattern** — Swift calls requestMarkdown, JS posts back via postMessage
-- **Debounce timings:** cursor position 100ms, content change fires on every `input` event (no debounce), mermaid observer 200ms. These are tuned values.
+- **Separate EditorMessageHandler class** — avoids WKUserContentController retain cycle (holds VC weakly)
 
 ## Hard-Won Lessons (DO NOT repeat these mistakes)
 
-1. **`@main` on NSApplicationDelegate does NOT call NSApplication.run() without a storyboard.** Must use `main.swift` with explicit `NSApplication.shared.run()`. See `Marker/main.swift`.
+1. **`@main` on NSApplicationDelegate does NOT call NSApplication.run() without a storyboard.** Must use `main.swift` with explicit `NSApplication.shared.run()`.
 
-2. **xcodegen `resources:` config doesn't reliably copy files.** Use `postCompileScripts` to `cp -R` resources into `${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources/`.
+2. **xcodegen `resources:` config doesn't reliably copy files.** Use `postCompileScripts` to `cp -R` resources.
 
-3. **`Bundle.main.url(forResource:withExtension:subdirectory:"Resources")` is WRONG.** The subdirectory parameter is relative to Contents/Resources/, so this looks at Contents/Resources/Resources/. Use `Bundle.main.url(forResource:withExtension:)` with no subdirectory.
+3. **`Bundle.main.url(forResource:withExtension:subdirectory:"Resources")` is WRONG.** Use no subdirectory parameter.
 
-4. **editor.js is an IIFE, not an ES module.** The `<script>` tag must NOT have `type="module"`. Just `<script src="./editor.js"></script>`.
+4. **editor.js is an IIFE, not an ES module.** No `type="module"` on the script tag.
 
-5. **CSS is in a separate file** (`assets/style-*.css`). Must be linked in editor.html AND `allowingReadAccessTo` must include the parent directory (not just the HTML file). **The CSS filename contains a content hash** (e.g., `style-Bw5clF0G.css`). After rebuilding the editor bundle, you MUST update the `<link>` href in editor.html to match the new hash.
+5. **CSS filename contains a content hash** (e.g., `style-Bw5clF0G.css`). After rebuilding, update the `<link>` href in editor.html.
 
-6. **`NSApp.setActivationPolicy(.regular)` is required** for a programmatic AppKit app to show in Dock and receive focus. Set in main.swift before app.run().
+6. **`NSApp.setActivationPolicy(.regular)` is required** for programmatic AppKit apps.
 
-7. **editor.html CSP must include `'unsafe-eval'`.** Milkdown/ProseMirror requires eval for its plugin system. Removing unsafe-eval silently breaks the editor with no visible error.
+7. **editor.html CSP must include `'unsafe-eval'`.** Milkdown/ProseMirror requires eval.
 
-8. **editor.html must call `marker.init()` after the script loads.** Without this, the TabPool is never created and the editor window is blank. The init opens a welcome tab so there's visible content immediately.
+8. **editor.html must call `marker.init()` after the script loads.** Without this, the editor is blank.
 
-9. **editor.html is manually maintained, NOT generated by Vite.** It lives in `marker-swift/Marker/Resources/`. The `<link>`, `<script>`, `<style>`, and CSP meta tag are all hand-written. Do not expect Vite to produce it.
+9. **editor.html is manually maintained, NOT generated by Vite.**
 
-## Known Part A Bugs (unfixed in the JS bundle)
+10. **`windowDidLoad` is NOT called for programmatically created windows.** Use explicit setup after `showWindow`.
 
-These bugs exist in the current editor JS and need fixing:
+11. **`evaluateJavaScript` fails on async JS functions** returning Promises ("unsupported type"). Always use `callAsyncJavaScript` for async marker.* calls.
 
-1. **Mermaid toggle race condition:** In `crepe-mermaid.ts`, the suppression timeout (100ms) expires before the MutationObserver debounce (200ms) fires, allowing re-render loops. Fix: increase suppression to 300ms or use a flag instead of a timer.
+12. **`NSColor.cgColor` snapshots are static.** Use `viewDidChangeEffectiveAppearance` or `AppearanceAwareView` to re-snapshot on theme change.
 
-2. **Search Enter doesn't cycle matches:** `FindReplace.svelte` calls `onFind()` on Enter, which re-runs the search from index 0. Should call `nextMatch()`/`prevMatch()` instead. The functions exist in `search.ts` but are not wired.
+13. **`NSSearchField` action fires on Enter only, not per-keystroke.** Use `controlTextDidChange` delegate method for live search.
 
-3. **Image paste posts to Swift but Swift doesn't handle it:** MessageHandler only logs. Need Swift-side image save logic (FileManager write to `.marker-assets/`) before image paste works end-to-end.
+14. **`isHidden = true` does NOT collapse height in manual Auto Layout.** Use an explicit zero-height constraint that's toggled on show/hide.
 
-4. **replaceMatch resets match index to 0** after replacing. Should preserve the current index position.
+15. **Tab IDs must be unique.** Use `UUID().uuidString`, not millisecond timestamps (collide on rapid opens).
 
 ## Project Structure
 
 ```
 marker-swift/
 ├── Marker/
-│   ├── main.swift              # NSApplication setup + run loop
-│   ├── AppDelegate.swift       # Window, WKWebView, bridge, file open
-│   ├── Info.plist              # Bundle config + .md file associations
-│   └── Marker.entitlements     # JIT entitlement for WKWebView
-├── Marker/Resources/           # Manually maintained + copied from marker/dist-editor
-│   ├── editor.html             # WKWebView host page (HAND-WRITTEN, not generated)
-│   ├── editor.js               # IIFE bundle (TabPool + Milkdown + plugins)
-│   └── assets/                 # CSS + fonts (from Vite build)
-├── project.yml                 # xcodegen config
-└── Marker.xcodeproj/           # Generated by xcodegen
+│   ├── main.swift                    # NSApplication setup + run loop
+│   ├── AppDelegate.swift             # Lifecycle, file open, EditorDelegate, menu actions
+│   ├── MainWindowController.swift    # NSWindow + NSSplitView + tab/find/outline/status wiring
+│   ├── EditorWebViewController.swift # WKWebView + MarkerBridge + MessageHandler
+│   ├── MarkerBridge.swift            # Typed Swift API over callAsyncJavaScript
+│   ├── TabManager.swift              # Tab state: ordered list, dirty, encoding, recently-closed
+│   ├── TabBarView.swift              # Custom NSView tab bar
+│   ├── FindBarView.swift             # Native find/replace bar
+│   ├── StatusBarView.swift           # File path, cursor, encoding, line ending, word count
+│   ├── FileTreeViewController.swift  # NSOutlineView file tree with context menu
+│   ├── FileNode.swift                # Lazy-loading directory tree model
+│   ├── OutlineViewController.swift   # Heading outline (H1-H6) with click-to-scroll
+│   ├── FileIO.swift                  # Read/write with encoding detection + line ending preservation
+│   ├── FileWatcher.swift             # FSEvents directory watcher with debounce
+│   ├── SessionManager.swift          # Session persistence to ~/Library/Application Support/Marker/
+│   ├── PreferencesWindowController.swift # Font, theme, auto-save settings
+│   ├── MenuBuilder.swift             # Programmatic NSMenu construction
+│   ├── MarkerSchemeHandler.swift      # WKURLSchemeHandler for marker-file://
+│   ├── AppearanceAwareView.swift     # NSView that re-snapshots CGColor on appearance change
+│   ├── Info.plist                    # Bundle config + .md file associations
+│   └── Marker.entitlements           # JIT entitlement for WKWebView
+├── Marker/Resources/                 # Manually maintained + copied from marker/dist-editor
+│   ├── editor.html                   # WKWebView host page (HAND-WRITTEN)
+│   ├── editor.js                     # IIFE bundle (TabPool + Milkdown + plugins)
+│   ├── AppIcon.icns                  # App icon
+│   └── assets/                       # CSS + fonts (from Vite build)
+├── MarkerTests/
+│   ├── TabManagerTests.swift         # 22 tests
+│   └── FileIOTests.swift             # 7 tests
+├── project.yml                       # xcodegen config
+└── Marker.xcodeproj/                 # Generated by xcodegen
 ```
-
-## Editor Bundle
-
-The JS editor is built from `/Users/esaipetch/devwork/marker` using:
-```bash
-cd /Users/esaipetch/devwork/marker
-npx vite build --config vite.config.webview.ts
-```
-Output goes to `dist-editor/`. Entry point: `src/lib/editor/webview-entry.ts`.
 
 ## Editor Bundle Rebuild Workflow
 
@@ -105,24 +125,27 @@ When you change any TypeScript in `marker/`:
 1. `cd /Users/esaipetch/devwork/marker`
 2. `npx vite build --config vite.config.webview.ts`
 3. `cp -R dist-editor/* /Users/esaipetch/devwork/marker-swift/Marker/Resources/`
-4. **Check if CSS hash changed:** `ls dist-editor/assets/style-*.css` — if the filename differs from what's in editor.html, update the `<link href>` in `Marker/Resources/editor.html`
+4. **Check if CSS hash changed:** `ls dist-editor/assets/style-*.css` — update `<link href>` in editor.html if needed
 5. `cd /Users/esaipetch/devwork/marker-swift && xcodegen generate`
 6. `xcodebuild -project Marker.xcodeproj -scheme Marker -configuration Debug build`
 
-**WARNING:** editor.html is manually maintained. Vite does NOT generate it. The CSS `<link>` href contains a content hash that changes on rebuild.
-
 ## Bridge API
 
-**Swift → JS (evaluateJavaScript):**
-- `marker.init()` — creates TabPool, opens welcome tab
+**Swift → JS (callAsyncJavaScript):**
+- `marker.init()` — creates TabPool, opens welcome tab, posts "ready"
 - `marker.openTab(tabId, markdown)` — opens/switches to tab
-- `marker.switchTab(tabId, markdown)` — same as openTab
+- `marker.switchTab(tabId, markdown)` — shows existing tab (markdown used if evicted)
 - `marker.requestMarkdown(tabId)` — triggers postMessage callback with content
 - `marker.closeTab(tabId)` — destroys tab
 - `marker.scrollToHeading(tabId, index)` — scroll to nth heading
 - `marker.setTheme("dark"|"light")` — change theme
 - `marker.setFontSize(px)` / `marker.setFontFamily(family)`
-- `marker.getMarkdown(tabId)` — synchronous return (use for simple cases)
+- `marker.find(tabId, query, caseSensitive, wholeWord, useRegex)` — search, returns {count, currentIndex}
+- `marker.findNext(tabId)` / `marker.findPrev(tabId)` — cycle matches
+- `marker.replaceOne(tabId, replacement, query, ...)` — replace current match
+- `marker.replaceAllMatches(tabId, query, replacement, ...)` — replace all
+- `marker.clearSearch(tabId)` — remove highlights
+- `marker.insertText(tabId, text)` — insert text at cursor
 
 **JS → Swift (postMessage):**
 - `{type: "ready"}` — editor initialized
@@ -131,24 +154,6 @@ When you change any TypeScript in `marker/`:
 - `{type: "markdown", tabId, content}` — response to requestMarkdown
 - `{type: "evicted", tabId, markdown}` — tab evicted from LRU pool
 - `{type: "imagePaste", tabId, base64, extension}` — image pasted/dropped
-
-## Remaining Issues (GitHub: edsai/marker-swift)
-
-### Part B — Swift hybrid rewrite
-- B2 (#9): App shell — NSSplitView + custom tab bar
-- B3 (#10): Already partially done (WKWebView + bridge working)
-- B3.5 (#20): WKURLSchemeHandler for marker-file://
-- B3-addendum (#24): WKWebView crash recovery
-- B4 (#11): Native file tree (NSOutlineView)
-- B5 (#12): Native outline panel
-- B6 (#13): Native status bar
-- B7 (#14): File I/O in Swift (encoding detection, atomic writes)
-- B8 (#15): File watching (FSEvents)
-- B9a (#21): Session persistence + crash recovery
-- B9b (#22): File conflict + orphan tab handling
-- B9c (#23): Native preferences window
-- B10 (#17): Native menu bar
-- B11 (#18): macOS integration + signing + distribution
 
 ## Build & Run
 
@@ -161,20 +166,20 @@ xcodegen generate
 # Build
 xcodebuild -project Marker.xcodeproj -scheme Marker -configuration Debug build
 
-# Find the built app (DerivedData path is machine-specific)
+# Run tests
+xcodebuild -project Marker.xcodeproj -scheme MarkerTests -configuration Debug test -destination 'platform=macOS'
+
+# Install to /Applications
 APP_PATH=$(xcodebuild -project Marker.xcodeproj -scheme Marker -showBuildSettings 2>/dev/null | grep " BUILT_PRODUCTS_DIR" | awk '{print $3}')/Marker.app
+rm -rf /Applications/Marker.app && cp -R "$APP_PATH" /Applications/Marker.app
 
-# Run via open (no logs)
-open "$APP_PATH"
-
-# Or run directly to see NSLog output
-"$APP_PATH/Contents/MacOS/Marker"
+# Launch
+open /Applications/Marker.app
 ```
 
-## User Preferences
+## Known Issues / Future Work
 
-- Run adversarial + architecture reviews on plans before implementation
-- Wait for ALL reviews to complete before proceeding
-- Use Sonnet agents for dev work, Opus for reviews
-- Decompose work into GitHub issues before coding
-- Always test builds before committing
+- **App Store readiness:** Session dir uses ~/Library/Application Support/ (sandbox-ready), but needs security-scoped bookmarks for persistent file access. Remove `developerExtrasEnabled` for release builds.
+- **No `validateMenuItem` for all items** — some menu items could be smarter about disabled state
+- **Outline heading indent** uses fragile constraint lookup on reused cells
+- **Word count** queries DOM on every keystroke — consider debouncing
