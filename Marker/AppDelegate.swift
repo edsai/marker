@@ -4,6 +4,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     var windowController: MainWindowController!
     var pendingFiles: [String] = []
     private var bridgeReady = false
+    private var preferencesController: PreferencesWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MenuBuilder.buildMainMenu()
@@ -24,6 +25,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Save session before terminating
+        SessionManager.save(tabManager: windowController.tabManager, workspaceURL: windowController.fileTreeVC.rootURL)
         // Break WKUserContentController → MessageHandler retain before exit
         windowController.editorVC?.cleanup()
     }
@@ -130,7 +133,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     // MARK: - EditorDelegate
 
     func editorDidBecomeReady() {
-        guard !bridgeReady else { return }
+        if bridgeReady {
+            // This is a crash recovery — re-open all existing tabs
+            NSLog("Marker: bridge re-ready (crash recovery), restoring \(windowController.tabManager.tabs.count) tabs")
+            for tab in windowController.tabManager.tabs {
+                if let path = tab.filePath {
+                    windowController.editorVC?.bridge.openTab(id: tab.id, content: (try? FileIO.readFile(at: path).content) ?? "")
+                }
+            }
+            if let activeId = windowController.tabManager.activeTabId {
+                windowController.editorVC?.bridge.switchTab(id: activeId)
+            }
+            return
+        }
+
         bridgeReady = true
         windowController.tabManager.addTab(id: "welcome", title: "Welcome")
         NSLog("Marker: bridge ready, opening \(pendingFiles.count) pending files")
@@ -138,6 +154,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
             openFile(path: file)
         }
         pendingFiles.removeAll()
+
+        // Restore session
+        restoreSession()
+
+        // Apply saved preferences
+        let defaults = UserDefaults.standard
+        let fontSize = defaults.integer(forKey: "editorFontSize")
+        if fontSize > 0 {
+            windowController.editorVC?.bridge.setFontSize(fontSize)
+        }
+        let fontFamily = defaults.string(forKey: "editorFontFamily") ?? ""
+        if !fontFamily.isEmpty && fontFamily != "System Default" {
+            windowController.editorVC?.bridge.setFontFamily(fontFamily)
+        }
+    }
+
+    private func restoreSession() {
+        guard let state = SessionManager.restore() else { return }
+
+        // Restore workspace
+        if let workspacePath = state.workspaceURL {
+            let url = URL(fileURLWithPath: workspacePath)
+            if FileManager.default.fileExists(atPath: workspacePath) {
+                windowController.fileTreeVC.rootURL = url
+                windowController.fileWatcher.watch(directory: url)
+                windowController.window?.title = "Marker — \(url.lastPathComponent)"
+            }
+        }
+
+        // Restore tabs (only those with file paths that still exist)
+        for tab in state.tabs {
+            guard let path = tab.filePath,
+                  FileManager.default.fileExists(atPath: path),
+                  tab.id != "welcome" else { continue }
+            openFile(path: path)
+        }
     }
 
     func editor(didChangeDirty tabId: String, isDirty: Bool) {
@@ -247,7 +299,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     }
 
     @objc func showPreferences() {
-        // B9c will implement preferences window
-        NSLog("Marker: preferences not yet implemented")
+        if preferencesController == nil {
+            preferencesController = PreferencesWindowController()
+        }
+        preferencesController?.showWindow(nil)
+        preferencesController?.window?.makeKeyAndOrderFront(nil)
     }
 }

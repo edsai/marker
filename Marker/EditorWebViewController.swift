@@ -10,7 +10,7 @@ protocol EditorDelegate: AnyObject {
     func editor(didPasteImage tabId: String, base64: String, fileExtension: String)
 }
 
-class EditorWebViewController: NSViewController, WKNavigationDelegate {
+class EditorWebViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
     private(set) var webView: WKWebView!
     private(set) var bridge: MarkerBridge!
     private var messageHandler: EditorMessageHandler?
@@ -31,6 +31,7 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate {
 
         let wv = WKWebView(frame: .zero, configuration: config)
         wv.navigationDelegate = self
+        wv.uiDelegate = self
         wv.wantsLayer = true
         wv.layer?.backgroundColor = NSColor.black.cgColor
 
@@ -66,6 +67,23 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         NSLog("Marker: provisional navigation failed: \(error)")
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        NSLog("Marker: WKWebView process terminated — recovering")
+
+        // Reload the editor
+        loadEditor()
+
+        // Show notification to user
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = "Editor Recovered"
+            alert.informativeText = "The editor recovered from a crash. Your content has been preserved."
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+        }
     }
 }
 

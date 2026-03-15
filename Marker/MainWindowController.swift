@@ -239,12 +239,31 @@ extension MainWindowController: FileWatcherDelegate {
             fileTreeVC.rootURL = fileTreeVC.rootURL  // triggers reload
         }
 
-        // Reload any open clean tabs whose files changed
         for path in paths {
-            guard let tab = tabManager.tabByFilePath(path),
-                  !tab.isDirty else { continue }
-            // Re-read and update the tab content
-            (NSApp.delegate as? AppDelegate)?.reloadTab(id: tab.id, path: path)
+            guard let tab = tabManager.tabByFilePath(path) else { continue }
+
+            if !FileManager.default.fileExists(atPath: path) {
+                // File was deleted — mark tab as orphaned
+                tabBarView.updateTitle(id: tab.id, title: "⚠ \(tab.title)")
+                continue
+            }
+
+            if tab.isDirty {
+                // Dirty tab + external change — ask user
+                let alert = NSAlert()
+                alert.messageText = "File Changed on Disk"
+                alert.informativeText = "\(tab.title) has been modified externally. Reload from disk or keep your changes?"
+                alert.addButton(withTitle: "Reload")
+                alert.addButton(withTitle: "Keep Mine")
+                alert.alertStyle = .warning
+
+                if alert.runModal() == .alertFirstButtonReturn {
+                    (NSApp.delegate as? AppDelegate)?.reloadTab(id: tab.id, path: path)
+                }
+            } else {
+                // Clean tab — silently reload
+                (NSApp.delegate as? AppDelegate)?.reloadTab(id: tab.id, path: path)
+            }
         }
     }
 }
