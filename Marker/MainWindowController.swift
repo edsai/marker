@@ -241,7 +241,7 @@ extension MainWindowController: TabBarViewDelegate {
     }
 
     func tabBarDidRequestNewTab() {
-        let tabId = "tab-\(Int(Date().timeIntervalSince1970 * 1000))"
+        let tabId = "tab-\(UUID().uuidString)"
         editorVC?.bridge.openTab(id: tabId, content: "") { [weak self] success in
             guard success else { return }
             self?.tabManager.addTab(id: tabId, title: "Untitled")
@@ -254,7 +254,16 @@ extension MainWindowController: TabBarViewDelegate {
 extension MainWindowController: TabManagerDelegate {
     func tabManager(_ manager: TabManager, didSwitchTo tab: Tab) {
         tabBarView.setActiveTab(id: tab.id)
-        editorVC?.bridge.switchTab(id: tab.id)
+
+        // Pass file content in case the tab was evicted from the JS pool
+        let content: String
+        if let path = tab.filePath, let fileContent = try? FileIO.readFile(at: path) {
+            let dirPath = (path as NSString).deletingLastPathComponent
+            content = AppDelegate.resolveImagePaths(in: fileContent.content, baseDir: dirPath)
+        } else {
+            content = ""
+        }
+        editorVC?.bridge.switchTab(id: tab.id, content: content)
         outlineVC.activeTabId = tab.id
         outlineVC.refreshHeadings(webView: editorVC?.webView)
         statusBarView.updateFilePath(tab.filePath)
@@ -404,9 +413,12 @@ extension MainWindowController: FindBarDelegate {
 
     func findBarDidClose(_ bar: FindBarView) {
         // Collapse the find bar height when closed
-        if bar.isHidden {
-            findBarHeightConstraint.isActive = true
-        }
+        findBarHeightConstraint.isActive = true
+        guard let tabId = tabManager.activeTabId else { return }
+        editorVC?.bridge.clearSearch(tabId: tabId)
+    }
+
+    func findBarDidRequestClear(_ bar: FindBarView) {
         guard let tabId = tabManager.activeTabId else { return }
         editorVC?.bridge.clearSearch(tabId: tabId)
     }

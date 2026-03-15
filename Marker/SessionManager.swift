@@ -15,7 +15,8 @@ struct SessionState: Codable {
 
 class SessionManager {
     private static let sessionDir: URL = {
-        let dir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".marker")
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Marker")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }()

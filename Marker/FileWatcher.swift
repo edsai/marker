@@ -86,9 +86,7 @@ class FileWatcher {
             guard let self = self else { return }
             let paths = Array(self.pendingPaths)
             self.pendingPaths.removeAll()
-            DispatchQueue.main.async {
-                self.delegate?.fileWatcher(self, didDetectChangesAt: paths)
-            }
+            self.delegate?.fileWatcher(self, didDetectChangesAt: paths)
         }
         debounceWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + debounceInterval, execute: work)

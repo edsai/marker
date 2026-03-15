@@ -180,10 +180,11 @@ class FileTreeViewController: NSViewController, NSOutlineViewDataSource, NSOutli
 
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
         if item == nil {
-            return rootNode!.children![index]
+            guard let children = rootNode?.children, index < children.count else { return NSNull() }
+            return children[index]
         }
-        let node = item as! FileNode
-        return node.children![index]
+        guard let node = item as? FileNode, let children = node.children, index < children.count else { return NSNull() }
+        return children[index]
     }
 
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
@@ -252,11 +253,7 @@ class FileTreeViewController: NSViewController, NSOutlineViewDataSource, NSOutli
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
-        let row = outlineView.selectedRow
-        guard row >= 0, let node = outlineView.item(atRow: row) as? FileNode else { return }
-        if node.isMarkdown {
-            delegate?.fileTree(didSelectFile: node.url)
-        }
+        // Selection only — don't open file. Double-click handles opening.
     }
 
     func outlineViewItemWillExpand(_ notification: Notification) {

@@ -133,7 +133,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
             return
         }
 
-        let tabId = "tab-\(Int(Date().timeIntervalSince1970 * 1000))"
+        let tabId = "tab-\(UUID().uuidString)"
         let title = (path as NSString).lastPathComponent
         let dirPath = (path as NSString).deletingLastPathComponent
         let resolved = Self.resolveImagePaths(in: fileContent.content, baseDir: dirPath)
@@ -259,11 +259,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
                     }
                 }
             }
+            var didReply = false
             group.notify(queue: .main) {
+                guard !didReply else { return }
+                didReply = true
                 NSApp.reply(toApplicationShouldTerminate: true)
             }
             // Safety timeout in case JS never responds
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                guard !didReply else { return }
+                didReply = true
                 NSApp.reply(toApplicationShouldTerminate: true)
             }
             return .terminateLater
@@ -293,7 +298,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
             NSLog("Marker: bridge re-ready (crash recovery), restoring \(windowController.tabManager.tabs.count) tabs")
             for tab in windowController.tabManager.tabs {
                 if let path = tab.filePath {
-                    windowController.editorVC?.bridge.openTab(id: tab.id, content: (try? FileIO.readFile(at: path).content) ?? "")
+                    if let fileContent = try? FileIO.readFile(at: path) {
+                        let dirPath = (path as NSString).deletingLastPathComponent
+                        let resolved = Self.resolveImagePaths(in: fileContent.content, baseDir: dirPath)
+                        windowController.editorVC?.bridge.openTab(id: tab.id, content: resolved)
+                    }
                 }
             }
             if let activeId = windowController.tabManager.activeTabId {
@@ -606,5 +615,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
         }
         preferencesController?.showWindow(nil)
         preferencesController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    // MARK: - Menu Validation
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        switch menuItem.action {
+        case #selector(saveCurrentTab), #selector(saveCurrentTabAs), #selector(closeCurrentTab):
+            return windowController.tabManager.activeTab != nil
+        case #selector(reopenClosedTab):
+            return !windowController.tabManager.recentlyClosed.isEmpty
+        case #selector(findNext), #selector(findPrevious):
+            return !windowController.findBarView.isHidden
+        default:
+            return true
+        }
     }
 }

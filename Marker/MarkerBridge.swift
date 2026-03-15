@@ -21,9 +21,9 @@ class MarkerBridge {
         }
     }
 
-    func switchTab(id: String) {
+    func switchTab(id: String, content: String = "") {
         callAsync("await marker.switchTab(tabId, content)",
-                  arguments: ["tabId": id, "content": ""])
+                  arguments: ["tabId": id, "content": content])
     }
 
     func closeTab(id: String) {

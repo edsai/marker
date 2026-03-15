@@ -7,6 +7,7 @@ protocol FindBarDelegate: AnyObject {
     func findBar(_ bar: FindBarView, didReplace replacement: String)
     func findBar(_ bar: FindBarView, didReplaceAll replacement: String)
     func findBarDidClose(_ bar: FindBarView)
+    func findBarDidRequestClear(_ bar: FindBarView)
 }
 
 class FindBarView: NSView, NSSearchFieldDelegate {
@@ -181,7 +182,7 @@ class FindBarView: NSView, NSSearchFieldDelegate {
         if query.isEmpty {
             resultLabel.stringValue = ""
             lastQuery = ""
-            delegate?.findBarDidClose(self)  // Clear highlights
+            delegate?.findBarDidRequestClear(self)  // Clear highlights without closing
             return
         }
         lastQuery = query

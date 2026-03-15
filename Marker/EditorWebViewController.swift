@@ -130,6 +130,13 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         NSLog("Marker: WKWebView process terminated — recovering")
 
+        // Remove old handler before reload creates a duplicate
+        webView.configuration.userContentController.removeScriptMessageHandler(forName: "marker")
+        // Re-add handler
+        let handler = EditorMessageHandler(editorVC: self)
+        messageHandler = handler
+        webView.configuration.userContentController.add(handler, name: "marker")
+
         // Reload the editor
         loadEditor()
 
