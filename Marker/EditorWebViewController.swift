@@ -57,6 +57,23 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
 
     // MARK: - WKNavigationDelegate
 
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Intercept file drops and link clicks that would navigate away from editor.html
+        if let url = navigationAction.request.url, url.isFileURL, url.pathExtension != "html" {
+            // This is a dropped file or a clicked file link — open as tab instead
+            let path = url.path
+            let ext = url.pathExtension.lowercased()
+            if ["md", "markdown", "mdown", "txt"].contains(ext) {
+                DispatchQueue.main.async {
+                    (NSApp.delegate as? AppDelegate)?.openFile(path: path)
+                }
+            }
+            decisionHandler(.cancel)
+            return
+        }
+        decisionHandler(.allow)
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         NSLog("Marker: page finished loading")
     }
