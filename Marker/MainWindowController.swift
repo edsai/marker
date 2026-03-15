@@ -242,8 +242,18 @@ extension MainWindowController: TabManagerDelegate {
         editorVC?.bridge.switchTab(id: tab.id)
         outlineVC.activeTabId = tab.id
         outlineVC.refreshHeadings(webView: editorVC?.webView)
-        let filePath = tab.filePath
-        statusBarView.updateFilePath(filePath)
+        statusBarView.updateFilePath(tab.filePath)
+
+        // Update file tree to show the switched-to file's parent directory
+        if let path = tab.filePath {
+            let dirURL = URL(fileURLWithPath: (path as NSString).deletingLastPathComponent)
+            let currentRoot = fileTreeVC.rootURL
+            if currentRoot == nil || !path.hasPrefix(currentRoot!.path) {
+                fileTreeVC.rootURL = dirURL
+                fileWatcher.watch(directory: dirURL)
+                window?.title = "Marker — \(dirURL.lastPathComponent)"
+            }
+        }
     }
 
     func tabManager(_ manager: TabManager, didClose tab: Tab) {
