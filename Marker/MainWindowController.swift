@@ -259,6 +259,15 @@ extension MainWindowController: TabManagerDelegate {
         outlineVC.refreshHeadings(webView: editorVC?.webView)
         statusBarView.updateFilePath(tab.filePath)
 
+        // Update encoding/line ending display for the switched tab
+        statusBarView.updateEncoding(tab.encoding)
+        statusBarView.updateLineEnding(tab.lineEnding)
+
+        // Update word count
+        editorVC?.bridge.getWordCount(tabId: tab.id) { [weak self] count in
+            self?.statusBarView.updateWordCount(count)
+        }
+
         // Update file tree to show the switched-to file's parent directory
         if let path = tab.filePath {
             let dirURL = URL(fileURLWithPath: (path as NSString).deletingLastPathComponent)
@@ -294,6 +303,10 @@ extension MainWindowController: TabManagerDelegate {
         tabBarView.updateDirty(id: tab.id, isDirty: tab.isDirty)
         // Refresh outline when content changes
         outlineVC.refreshHeadings(webView: editorVC?.webView)
+        // Update word count
+        editorVC?.bridge.getWordCount(tabId: tab.id) { [weak self] count in
+            self?.statusBarView.updateWordCount(count)
+        }
     }
 }
 

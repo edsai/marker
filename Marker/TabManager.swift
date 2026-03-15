@@ -5,6 +5,8 @@ struct Tab: Identifiable, Equatable {
     var title: String
     var filePath: String?  // nil for untitled/welcome tabs
     var isDirty: Bool = false
+    var encoding: String = "UTF-8"   // Display name from FileEncoding
+    var lineEnding: String = "LF"    // From LineEnding.rawValue
 
     static func == (lhs: Tab, rhs: Tab) -> Bool {
         lhs.id == rhs.id
@@ -88,6 +90,22 @@ class TabManager {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         tabs[index].isDirty = isDirty
         delegate?.tabManager(self, didUpdateDirty: tabs[index])
+    }
+
+    // MARK: - Metadata
+
+    func updateFileMetadata(id: String, filePath: String? = nil, title: String? = nil, encoding: String? = nil, lineEnding: String? = nil) {
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+        if let filePath = filePath { tabs[index].filePath = filePath }
+        if let title = title { tabs[index].title = title }
+        if let encoding = encoding { tabs[index].encoding = encoding }
+        if let lineEnding = lineEnding { tabs[index].lineEnding = lineEnding }
+    }
+
+    // MARK: - Recently Closed
+
+    func popRecentlyClosed() -> Tab? {
+        return recentlyClosed.popLast()
     }
 
     // MARK: - Lookup

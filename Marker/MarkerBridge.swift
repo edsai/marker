@@ -154,6 +154,22 @@ class MarkerBridge {
         callAsync("marker.clearSearch(tabId)", arguments: ["tabId": tabId])
     }
 
+    // MARK: - Word Count
+
+    func getWordCount(tabId: String, completion: @escaping (Int) -> Void) {
+        let js = """
+        (function() {
+            var active = document.querySelector('.editor-tab-container[style*="display: block"] .ProseMirror');
+            if (!active) return 0;
+            var text = active.innerText || '';
+            return text.trim().split(/\\s+/).filter(function(w) { return w.length > 0; }).length;
+        })()
+        """
+        webView?.evaluateJavaScript(js) { result, _ in
+            completion((result as? Int) ?? 0)
+        }
+    }
+
     // MARK: - Private
 
     private func callAsync(_ script: String, arguments: [String: Any] = [String: Any](),

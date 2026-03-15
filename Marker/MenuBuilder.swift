@@ -38,6 +38,8 @@ struct MenuBuilder {
         saveAs.keyEquivalentModifierMask = [.command, .shift]
         fileMenu.addItem(NSMenuItem.separator())
         fileMenu.addItem(withTitle: "Close Tab", action: #selector(AppDelegate.closeCurrentTab), keyEquivalent: "w")
+        let reopenItem = fileMenu.addItem(withTitle: "Reopen Closed Tab", action: #selector(AppDelegate.reopenClosedTab), keyEquivalent: "T")
+        reopenItem.keyEquivalentModifierMask = [.command, .shift]
 
         let fileMenuItem = NSMenuItem()
         fileMenuItem.submenu = fileMenu

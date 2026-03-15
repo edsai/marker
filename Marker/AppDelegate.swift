@@ -70,6 +70,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
         windowController.editorVC?.bridge.openTab(id: tabId, content: resolved) { [weak self] success in
             guard success else { return }
             self?.windowController.tabManager.addTab(id: tabId, title: title, filePath: path)
+            // Store encoding/lineEnding per tab
+            self?.windowController.tabManager.updateFileMetadata(
+                id: tabId,
+                encoding: fileContent.encoding.displayName,
+                lineEnding: fileContent.lineEnding.rawValue
+            )
             // Update status bar with file metadata
             self?.windowController.statusBarView.updateEncoding(fileContent.encoding.displayName)
             self?.windowController.statusBarView.updateLineEnding(fileContent.lineEnding.rawValue)
@@ -135,6 +141,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
             result.replaceSubrange(fullMatchRange, with: "![\(altText)](\(markerURL))")
         }
         return result
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let dirtyTabs = windowController.tabManager.tabs.filter { $0.isDirty }
+        guard !dirtyTabs.isEmpty else { return .terminateNow }
+
+        let alert = NSAlert()
+        alert.messageText = "You have unsaved changes"
+        alert.informativeText = "\(dirtyTabs.count) tab(s) with unsaved changes. Quit anyway?"
+        alert.addButton(withTitle: "Save All & Quit")
+        alert.addButton(withTitle: "Quit Without Saving")
+        alert.addButton(withTitle: "Cancel")
+        alert.alertStyle = .warning
+
+        let response = alert.runModal()
+        switch response {
+        case .alertFirstButtonReturn:
+            // Save all dirty tabs then quit
+            for tab in dirtyTabs {
+                guard let path = tab.filePath else { continue }
+                windowController.editorVC?.bridge.requestMarkdown(id: tab.id) { content in
+                    guard let content = content else { return }
+                    let enc: FileEncoding = tab.encoding == "UTF-8 BOM" ? .utf8BOM : (tab.encoding == "Latin-1" ? .latin1 : .utf8)
+                    let le: LineEnding = tab.lineEnding == "CRLF" ? .crlf : .lf
+                    try? FileIO.writeFile(at: path, content: content, encoding: enc, lineEnding: le)
+                }
+            }
+            // Give a moment for async saves, then terminate
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                NSApp.reply(toApplicationShouldTerminate: true)
+            }
+            return .terminateLater
+        case .alertSecondButtonReturn:
+            return .terminateNow
+        default:
+            return .terminateCancel
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -335,9 +378,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
 
         windowController.editorVC?.bridge.requestMarkdown(id: tab.id) { [weak self] content in
             guard let content = content else { return }
-            // TODO: Store encoding/lineEnding per tab (B9). For now use defaults.
+            let enc: FileEncoding = tab.encoding == "UTF-8 BOM" ? .utf8BOM : (tab.encoding == "Latin-1" ? .latin1 : .utf8)
+            let le: LineEnding = tab.lineEnding == "CRLF" ? .crlf : .lf
             do {
-                try FileIO.writeFile(at: path, content: content, encoding: .utf8, lineEnding: .lf)
+                try FileIO.writeFile(at: path, content: content, encoding: enc, lineEnding: le)
                 self?.windowController.tabManager.setDirty(id: tab.id, isDirty: false)
                 NSLog("Marker: saved \(path)")
             } catch {
@@ -358,10 +402,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
 
             self?.windowController.editorVC?.bridge.requestMarkdown(id: tab.id) { content in
                 guard let content = content else { return }
+                let enc: FileEncoding = tab.encoding == "UTF-8 BOM" ? .utf8BOM : (tab.encoding == "Latin-1" ? .latin1 : .utf8)
+                let le: LineEnding = tab.lineEnding == "CRLF" ? .crlf : .lf
                 do {
-                    try FileIO.writeFile(at: url.path, content: content, encoding: .utf8, lineEnding: .lf)
-                    // Update tab with new file path
-                    // For now just clear dirty since TabManager doesn't support updating filePath
+                    try FileIO.writeFile(at: url.path, content: content, encoding: enc, lineEnding: le)
+                    // Update tab with new file path and title
+                    self?.windowController.tabManager.updateFileMetadata(id: tab.id, filePath: url.path, title: url.lastPathComponent)
+                    self?.windowController.tabBarView.updateTitle(id: tab.id, title: url.lastPathComponent)
                     self?.windowController.tabManager.setDirty(id: tab.id, isDirty: false)
                     NSLog("Marker: saved as \(url.path)")
                 } catch {
@@ -374,6 +421,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     @objc func closeCurrentTab() {
         guard let tab = windowController.tabManager.activeTab else { return }
         windowController.confirmCloseTab(id: tab.id)
+    }
+
+    @objc func reopenClosedTab() {
+        guard let tab = windowController.tabManager.popRecentlyClosed() else { return }
+        if let path = tab.filePath, FileManager.default.fileExists(atPath: path) {
+            openFile(path: path)
+        }
     }
 
     func saveAndCloseTab(id: String) {

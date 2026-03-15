@@ -120,4 +120,53 @@ final class TabManagerTests: XCTestCase {
     func testTabByFilePathReturnsNilWhenNotFound() {
         XCTAssertNil(manager.tabByFilePath("/nope"))
     }
+
+    // MARK: - updateFileMetadata
+
+    func testUpdateFileMetadataUpdatesFilePath() {
+        manager.addTab(id: "t1", title: "Untitled")
+        manager.updateFileMetadata(id: "t1", filePath: "/docs/new.md")
+        XCTAssertEqual(manager.tab(for: "t1")?.filePath, "/docs/new.md")
+    }
+
+    func testUpdateFileMetadataUpdatesTitle() {
+        manager.addTab(id: "t1", title: "Old Title")
+        manager.updateFileMetadata(id: "t1", title: "New Title")
+        XCTAssertEqual(manager.tab(for: "t1")?.title, "New Title")
+    }
+
+    func testUpdateFileMetadataUpdatesEncodingAndLineEnding() {
+        manager.addTab(id: "t1", title: "doc")
+        manager.updateFileMetadata(id: "t1", encoding: "UTF-8 BOM", lineEnding: "CRLF")
+        XCTAssertEqual(manager.tab(for: "t1")?.encoding, "UTF-8 BOM")
+        XCTAssertEqual(manager.tab(for: "t1")?.lineEnding, "CRLF")
+    }
+
+    func testUpdateFileMetadataOnNonexistentIdIsNoOp() {
+        manager.addTab(id: "t1", title: "doc")
+        manager.updateFileMetadata(id: "bogus", title: "Should not appear")
+        XCTAssertEqual(manager.tab(for: "t1")?.title, "doc")
+    }
+
+    func testTabDefaultEncodingAndLineEnding() {
+        manager.addTab(id: "t1", title: "doc")
+        XCTAssertEqual(manager.tab(for: "t1")?.encoding, "UTF-8")
+        XCTAssertEqual(manager.tab(for: "t1")?.lineEnding, "LF")
+    }
+
+    // MARK: - popRecentlyClosed
+
+    func testPopRecentlyClosedReturnsLastClosed() {
+        manager.addTab(id: "t1", title: "One")
+        manager.addTab(id: "t2", title: "Two")
+        manager.closeTab(id: "t1")
+        manager.closeTab(id: "t2")
+        let popped = manager.popRecentlyClosed()
+        XCTAssertEqual(popped?.id, "t2")
+        XCTAssertEqual(manager.recentlyClosed.count, 1)
+    }
+
+    func testPopRecentlyClosedReturnsNilWhenEmpty() {
+        XCTAssertNil(manager.popRecentlyClosed())
+    }
 }
