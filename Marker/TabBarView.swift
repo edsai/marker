@@ -95,6 +95,9 @@ class TabBarView: NSView {
         activeTabId = id
         for (tabId, button) in tabButtons {
             button.setActive(tabId == id)
+            if tabId == id {
+                button.scrollToVisible(button.bounds)
+            }
         }
     }
 

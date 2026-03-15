@@ -88,20 +88,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     func openFile(path: String) {
         guard let data = FileManager.default.contents(atPath: path),
               let content = String(data: data, encoding: .utf8) else { return }
-        let escaped = content.replacingOccurrences(of: "\\", with: "\\\\")
-                            .replacingOccurrences(of: "'", with: "\\'")
-                            .replacingOccurrences(of: "\n", with: "\\n")
-                            .replacingOccurrences(of: "\r", with: "\\r")
         let tabId = "tab-\(Int(Date().timeIntervalSince1970 * 1000))"
         let title = (path as NSString).lastPathComponent
 
-        // Call JS first, register in TabManager only on success (prevents state divergence)
-        webView.evaluateJavaScript("marker.openTab('\(tabId)', '\(escaped)')") { [weak self] _, error in
-            if let error = error {
+        // Use callAsyncJavaScript with parameters to safely pass content (handles all Unicode)
+        webView.callAsyncJavaScript(
+            "await marker.openTab(tabId, content)",
+            arguments: ["tabId": tabId, "content": content],
+            in: nil,
+            in: .page
+        ) { [weak self] result in
+            switch result {
+            case .failure(let error):
                 NSLog("Marker: Failed to open tab: \(error)")
-                return
+            case .success:
+                self?.windowController.tabManager.addTab(id: tabId, title: title, filePath: path)
             }
-            self?.windowController.tabManager.addTab(id: tabId, title: title, filePath: path)
         }
     }
 

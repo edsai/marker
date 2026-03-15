@@ -105,9 +105,12 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
 
     override func windowDidLoad() {
         super.windowDidLoad()
-        // Set initial divider positions after layout pass
-        splitView.setPosition(220, ofDividerAt: 0)
-        splitView.setPosition(splitView.frame.width - 220, ofDividerAt: 1)
+        // Defer divider positioning to next run loop tick so the layout engine
+        // has resolved the split view's frame (it may be zero at windowDidLoad time)
+        DispatchQueue.main.async { [self] in
+            splitView.setPosition(220, ofDividerAt: 0)
+            splitView.setPosition(splitView.frame.width - 220, ofDividerAt: 1)
+        }
     }
 
     private func setupTabBar() {
@@ -147,8 +150,8 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
 
     func splitView(_ splitView: NSSplitView, constrainMaxCoordinate proposedMaximumPosition: CGFloat, ofSubviewAt dividerIndex: Int) -> CGFloat {
         if dividerIndex == 0 { return 400 }
-        // Right sidebar must be at least 140pt wide (or collapsed)
-        if dividerIndex == 1 { return proposedMaximumPosition }
+        // Right sidebar: allow full collapse, but when open must be at least 140pt
+        if dividerIndex == 1 { return proposedMaximumPosition - 140 }
         return proposedMaximumPosition
     }
 }
@@ -182,8 +185,7 @@ extension MainWindowController: TabBarViewDelegate {
 extension MainWindowController: TabManagerDelegate {
     func tabManager(_ manager: TabManager, didSwitchTo tab: Tab) {
         tabBarView.setActiveTab(id: tab.id)
-        // Only call switchTab for user-initiated switches (not the initial addTab switch)
-        // The JS side already has the tab from openTab — switchTab just shows it
+        // switchTab is idempotent in JS — calling it after openTab is safe (just re-shows the tab)
         webView?.evaluateJavaScript("marker.switchTab('\(tab.id)', '')") { _, error in
             if let error = error { NSLog("Marker: failed to switch tab: \(error)") }
         }
