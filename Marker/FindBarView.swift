@@ -65,10 +65,14 @@ class FindBarView: NSView, NSSearchFieldDelegate {
         for btn in [nextButton, prevButton, closeButton, caseSensitiveButton, wholeWordButton, regexButton] {
             btn.bezelStyle = .inline
             btn.isBordered = false
-            btn.font = NSFont.systemFont(ofSize: 11)
+            btn.font = NSFont.systemFont(ofSize: 13)
             btn.contentTintColor = .secondaryLabelColor
             btn.setContentHuggingPriority(.required, for: .horizontal)
         }
+
+        caseSensitiveButton.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        wholeWordButton.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        regexButton.font = NSFont.systemFont(ofSize: 13, weight: .medium)
 
         caseSensitiveButton.toolTip = "Case Sensitive"
         wholeWordButton.toolTip = "Whole Word"
@@ -81,8 +85,8 @@ class FindBarView: NSView, NSSearchFieldDelegate {
         wholeWordButton.target = self; wholeWordButton.action = #selector(toggleWholeWord)
         regexButton.target = self; regexButton.action = #selector(toggleRegex)
 
-        resultLabel.font = NSFont.systemFont(ofSize: 11)
-        resultLabel.textColor = .tertiaryLabelColor
+        resultLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        resultLabel.textColor = .secondaryLabelColor
         resultLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         let searchRow = NSStackView(views: [searchField, resultLabel, caseSensitiveButton, wholeWordButton, regexButton, prevButton, nextButton, closeButton])
