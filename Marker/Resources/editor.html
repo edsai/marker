@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: marker-file: blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: marker-file: blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+  <link rel="stylesheet" href="./assets/style-Bw5clF0G.css">
   <style>
     body { margin: 0; padding: 0; background: #1e1e1e; color: #ccc; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; }
     #editor-host { height: 100vh; overflow: hidden; position: relative; }
@@ -20,6 +21,12 @@
 </head>
 <body>
   <div id="editor-host"></div>
-  <script type="module" src="./editor.js"></script>
+  <script src="./editor.js"></script>
+  <script>
+    // Auto-init after the IIFE has run
+    if (window.marker) {
+      window.marker.init();
+    }
+  </script>
 </body>
 </html>

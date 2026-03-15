@@ -40,17 +40,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
-        // Initialize editor after page loads
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.webView.evaluateJavaScript("marker.init()") { _, error in
-                if let error = error {
-                    print("Failed to init editor: \(error)")
+        // Open pending files after editor has loaded
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            for file in self.pendingFiles {
+                self.openFile(path: file)
+            }
+            self.pendingFiles.removeAll()
+
+            // Verify editor loaded
+            self.webView.evaluateJavaScript("typeof window.marker") { result, error in
+                if let result = result as? String, result == "object" {
+                    print("Editor bridge loaded successfully")
                 } else {
-                    // Open any pending files
-                    for file in self.pendingFiles {
-                        self.openFile(path: file)
-                    }
-                    self.pendingFiles.removeAll()
+                    print("Editor bridge NOT loaded: \(String(describing: error))")
                 }
             }
         }
