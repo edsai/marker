@@ -2,75 +2,60 @@ import Cocoa
 import WebKit
 
 class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
-    var window: NSWindow!
+    var windowController: MainWindowController!
     var webView: WKWebView!
     var pendingFiles: [String] = []
+    private var messageHandler: MessageHandler?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSLog("Marker: applicationDidFinishLaunching")
 
-        // Create window
-        let windowRect = NSRect(x: 0, y: 0, width: 1200, height: 800)
-        window = NSWindow(contentRect: windowRect,
-                         styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                         backing: .buffered,
-                         defer: false)
-        window.center()
-        window.title = "Marker"
-        window.minSize = NSSize(width: 600, height: 400)
+        // Create main window controller (creates window + layout)
+        windowController = MainWindowController()
 
         // Create WKWebView
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
         let contentController = WKUserContentController()
-        contentController.add(MessageHandler(), name: "marker")
+        let handler = MessageHandler(appDelegate: self)
+        messageHandler = handler
+        contentController.add(handler, name: "marker")
         config.userContentController = contentController
 
-        webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
-        webView.autoresizingMask = [.width, .height]
+        webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
-
-        // Ensure the WebView is properly visible
         webView.wantsLayer = true
         webView.layer?.backgroundColor = NSColor.black.cgColor
-        window.contentView?.addSubview(webView)
-        window.contentView?.wantsLayer = true
+
+        // Pass webview to window controller (places it in center pane)
+        windowController.webView = webView
 
         // Load editor from bundle resources
         let editorURL = Bundle.main.url(forResource: "editor", withExtension: "html")
         NSLog("Marker: editor URL = \(String(describing: editorURL))")
-        NSLog("Marker: bundle path = \(Bundle.main.bundlePath)")
-        NSLog("Marker: resource path = \(String(describing: Bundle.main.resourcePath))")
 
         if let url = editorURL {
-            NSLog("Marker: loading \(url)")
             let resourceDir = url.deletingLastPathComponent()
-            NSLog("Marker: allowing read access to \(resourceDir)")
             webView.loadFileURL(url, allowingReadAccessTo: resourceDir)
         } else {
             NSLog("Marker: ERROR - editor.html not found!")
-            // Show error in the window
-            let label = NSTextField(labelWithString: "editor.html not found in bundle")
-            label.frame = NSRect(x: 50, y: 400, width: 500, height: 30)
-            label.textColor = .red
-            window.contentView?.addSubview(label)
         }
 
-        window.isOpaque = true
-        window.backgroundColor = NSColor(red: 0.118, green: 0.118, blue: 0.118, alpha: 1.0)
-        window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
+        windowController.showWindow(nil)
+        windowController.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Remove script message handler to prevent WKUserContentController leak
+        webView?.configuration.userContentController.removeScriptMessageHandler(forName: "marker")
     }
 
     // WKNavigationDelegate
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         NSLog("Marker: page finished loading")
 
-        // Check if marker bridge is available
         webView.evaluateJavaScript("typeof window.marker") { result, error in
-            NSLog("Marker: bridge check = \(String(describing: result)), error = \(String(describing: error))")
-
             if let result = result as? String, result == "object" {
                 NSLog("Marker: bridge loaded OK, opening pending files")
                 for file in self.pendingFiles {
@@ -78,11 +63,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
                 }
                 self.pendingFiles.removeAll()
             }
-        }
-
-        // Also check for JS errors
-        webView.evaluateJavaScript("document.body.innerHTML.substring(0, 200)") { result, error in
-            NSLog("Marker: body = \(String(describing: result))")
         }
     }
 
@@ -113,10 +93,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
                             .replacingOccurrences(of: "\n", with: "\\n")
                             .replacingOccurrences(of: "\r", with: "\\r")
         let tabId = "tab-\(Int(Date().timeIntervalSince1970 * 1000))"
-        webView.evaluateJavaScript("marker.openTab('\(tabId)', '\(escaped)')") { _, error in
+        let title = (path as NSString).lastPathComponent
+
+        // Call JS first, register in TabManager only on success (prevents state divergence)
+        webView.evaluateJavaScript("marker.openTab('\(tabId)', '\(escaped)')") { [weak self] _, error in
             if let error = error {
                 NSLog("Marker: Failed to open tab: \(error)")
+                return
             }
+            self?.windowController.tabManager.addTab(id: tabId, title: title, filePath: path)
         }
     }
 
@@ -125,10 +110,40 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     }
 }
 
+// MARK: - MessageHandler
+
 class MessageHandler: NSObject, WKScriptMessageHandler {
+    weak var appDelegate: AppDelegate?
+
+    init(appDelegate: AppDelegate) {
+        self.appDelegate = appDelegate
+        super.init()
+    }
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any],
               let type = body["type"] as? String else { return }
+
         NSLog("Marker: bridge message: \(type)")
+
+        switch type {
+        case "dirty":
+            if let tabId = body["tabId"] as? String,
+               let isDirty = body["isDirty"] as? Bool {
+                appDelegate?.windowController.tabManager.setDirty(id: tabId, isDirty: isDirty)
+            }
+        case "cursorChanged":
+            // B6 will handle status bar update
+            break
+        case "ready":
+            NSLog("Marker: editor ready")
+            // Register the welcome tab that marker.init() auto-creates (JS uses id "welcome")
+            appDelegate?.windowController.tabManager.addTab(id: "welcome", title: "Welcome")
+        case "markdown", "evicted", "imagePaste":
+            // Handled in later issues
+            break
+        default:
+            break
+        }
     }
 }
