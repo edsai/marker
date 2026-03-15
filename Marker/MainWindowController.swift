@@ -3,6 +3,7 @@ import Cocoa
 class MainWindowController: NSWindowController, NSSplitViewDelegate {
     let tabManager = TabManager()
     let tabBarView = TabBarView()
+    let findBarView = FindBarView()
     let fileWatcher = FileWatcher()
     private let splitView = NSSplitView()
     let fileTreeVC = FileTreeViewController()
@@ -61,6 +62,10 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
         tabBarView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(tabBarView)
 
+        findBarView.translatesAutoresizingMaskIntoConstraints = false
+        findBarView.isHidden = true
+        contentView.addSubview(findBarView)
+
         splitView.isVertical = true
         splitView.dividerStyle = .thin
         splitView.delegate = self
@@ -86,7 +91,11 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
             tabBarView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             tabBarView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
 
-            splitView.topAnchor.constraint(equalTo: tabBarView.bottomAnchor),
+            findBarView.topAnchor.constraint(equalTo: tabBarView.bottomAnchor),
+            findBarView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            findBarView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+
+            splitView.topAnchor.constraint(equalTo: findBarView.bottomAnchor),
             splitView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             splitView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
 
@@ -115,6 +124,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
         tabManager.delegate = self
         fileTreeVC.delegate = self
         fileWatcher.delegate = self
+        findBarView.delegate = self
     }
 
     // MARK: - Public API
@@ -307,6 +317,62 @@ extension MainWindowController: FileWatcherDelegate {
                 (NSApp.delegate as? AppDelegate)?.reloadTab(id: tab.id, path: path)
             }
         }
+    }
+}
+
+// MARK: - Find & Replace
+
+extension MainWindowController {
+    func showFind() {
+        findBarView.show(withReplace: false)
+    }
+
+    func showFindReplace() {
+        findBarView.show(withReplace: true)
+    }
+}
+
+extension MainWindowController: FindBarDelegate {
+    func findBar(_ bar: FindBarView, didSearchFor query: String, options: FindBarView.Options) {
+        guard let tabId = tabManager.activeTabId else { return }
+        editorVC?.bridge.find(tabId: tabId, query: query, caseSensitive: options.caseSensitive, wholeWord: options.wholeWord, useRegex: options.useRegex) { count, index in
+            bar.updateResults(count: count, index: index)
+        }
+    }
+
+    func findBarDidRequestNext(_ bar: FindBarView) {
+        guard let tabId = tabManager.activeTabId else { return }
+        editorVC?.bridge.findNext(tabId: tabId) { count, index in
+            bar.updateResults(count: count, index: index)
+        }
+    }
+
+    func findBarDidRequestPrev(_ bar: FindBarView) {
+        guard let tabId = tabManager.activeTabId else { return }
+        editorVC?.bridge.findPrev(tabId: tabId) { count, index in
+            bar.updateResults(count: count, index: index)
+        }
+    }
+
+    func findBar(_ bar: FindBarView, didReplace replacement: String) {
+        guard let tabId = tabManager.activeTabId else { return }
+        let opts = bar.options
+        editorVC?.bridge.replaceOne(tabId: tabId, replacement: replacement, query: bar.searchField.stringValue, caseSensitive: opts.caseSensitive, wholeWord: opts.wholeWord, useRegex: opts.useRegex) { count, index in
+            bar.updateResults(count: count, index: index)
+        }
+    }
+
+    func findBar(_ bar: FindBarView, didReplaceAll replacement: String) {
+        guard let tabId = tabManager.activeTabId else { return }
+        let opts = bar.options
+        editorVC?.bridge.replaceAllMatches(tabId: tabId, query: bar.searchField.stringValue, replacement: replacement, caseSensitive: opts.caseSensitive, wholeWord: opts.wholeWord, useRegex: opts.useRegex) { _ in
+            bar.updateResults(count: 0, index: -1)
+        }
+    }
+
+    func findBarDidClose(_ bar: FindBarView) {
+        guard let tabId = tabManager.activeTabId else { return }
+        editorVC?.bridge.clearSearch(tabId: tabId)
     }
 }
 

@@ -66,6 +66,94 @@ class MarkerBridge {
         callAsync("marker.setFontFamily(family)", arguments: ["family": family])
     }
 
+    // MARK: - Search
+
+    func find(tabId: String, query: String, caseSensitive: Bool, wholeWord: Bool, useRegex: Bool, completion: @escaping (Int, Int) -> Void) {
+        webView?.callAsyncJavaScript(
+            "return marker.find(tabId, query, caseSensitive, wholeWord, useRegex)",
+            arguments: ["tabId": tabId, "query": query, "caseSensitive": caseSensitive, "wholeWord": wholeWord, "useRegex": useRegex],
+            in: nil, in: .page
+        ) { result in
+            if case .success(let value) = result,
+               let dict = value as? [String: Any],
+               let count = dict["count"] as? Int,
+               let index = dict["currentIndex"] as? Int {
+                completion(count, index)
+            } else {
+                completion(0, -1)
+            }
+        }
+    }
+
+    func findNext(tabId: String, completion: @escaping (Int, Int) -> Void) {
+        webView?.callAsyncJavaScript(
+            "return marker.findNext(tabId)",
+            arguments: ["tabId": tabId],
+            in: nil, in: .page
+        ) { result in
+            if case .success(let value) = result,
+               let dict = value as? [String: Any],
+               let count = dict["count"] as? Int,
+               let index = dict["currentIndex"] as? Int {
+                completion(count, index)
+            } else {
+                completion(0, -1)
+            }
+        }
+    }
+
+    func findPrev(tabId: String, completion: @escaping (Int, Int) -> Void) {
+        webView?.callAsyncJavaScript(
+            "return marker.findPrev(tabId)",
+            arguments: ["tabId": tabId],
+            in: nil, in: .page
+        ) { result in
+            if case .success(let value) = result,
+               let dict = value as? [String: Any],
+               let count = dict["count"] as? Int,
+               let index = dict["currentIndex"] as? Int {
+                completion(count, index)
+            } else {
+                completion(0, -1)
+            }
+        }
+    }
+
+    func replaceOne(tabId: String, replacement: String, query: String, caseSensitive: Bool, wholeWord: Bool, useRegex: Bool, completion: @escaping (Int, Int) -> Void) {
+        webView?.callAsyncJavaScript(
+            "return marker.replaceOne(tabId, replacement, query, caseSensitive, wholeWord, useRegex)",
+            arguments: ["tabId": tabId, "replacement": replacement, "query": query, "caseSensitive": caseSensitive, "wholeWord": wholeWord, "useRegex": useRegex],
+            in: nil, in: .page
+        ) { result in
+            if case .success(let value) = result,
+               let dict = value as? [String: Any],
+               let count = dict["count"] as? Int,
+               let index = dict["currentIndex"] as? Int {
+                completion(count, index)
+            } else {
+                completion(0, -1)
+            }
+        }
+    }
+
+    func replaceAllMatches(tabId: String, query: String, replacement: String, caseSensitive: Bool, wholeWord: Bool, useRegex: Bool, completion: @escaping (Int) -> Void) {
+        webView?.callAsyncJavaScript(
+            "return marker.replaceAllMatches(tabId, query, replacement, caseSensitive, wholeWord, useRegex)",
+            arguments: ["tabId": tabId, "query": query, "replacement": replacement, "caseSensitive": caseSensitive, "wholeWord": wholeWord, "useRegex": useRegex],
+            in: nil, in: .page
+        ) { result in
+            if case .success(let value) = result, let count = value as? Int {
+                completion(count)
+            } else {
+                completion(0)
+            }
+        }
+    }
+
+    func clearSearch(tabId: String) {
+        callAsync("marker.clearSearch(tabId)", arguments: ["tabId": tabId])
+    }
+
     // MARK: - Private
 
     private func callAsync(_ script: String, arguments: [String: Any] = [String: Any](),

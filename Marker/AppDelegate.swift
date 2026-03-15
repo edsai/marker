@@ -412,6 +412,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
         }
     }
 
+    @objc func showFind() {
+        windowController.showFind()
+    }
+
+    @objc func showFindReplace() {
+        windowController.showFindReplace()
+    }
+
+    @objc func findNext() {
+        windowController.findBarView.delegate?.findBarDidRequestNext(windowController.findBarView)
+    }
+
+    @objc func findPrevious() {
+        windowController.findBarView.delegate?.findBarDidRequestPrev(windowController.findBarView)
+    }
+
     @objc func toggleSidebar() {
         windowController.toggleLeftSidebar()
     }
