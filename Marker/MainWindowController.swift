@@ -41,7 +41,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
         window.title = "Marker"
         window.minSize = NSSize(width: 600, height: 400)
         window.isOpaque = true
-        window.backgroundColor = NSColor(red: 0.118, green: 0.118, blue: 0.118, alpha: 1.0)
+        window.backgroundColor = .windowBackgroundColor
         window.setFrameAutosaveName("MainWindow")
 
         self.init(window: window)

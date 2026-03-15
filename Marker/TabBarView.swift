@@ -31,7 +31,7 @@ class TabBarView: NSView {
 
     private func setupViews() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor(red: 0.12, green: 0.12, blue: 0.12, alpha: 1.0).cgColor
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
         // Stack view for tab buttons
         stackView.orientation = .horizontal
@@ -209,7 +209,7 @@ private class TabButton: NSView {
 
     private func updateAppearance() {
         layer?.backgroundColor = isActive
-            ? NSColor(red: 0.18, green: 0.18, blue: 0.18, alpha: 1.0).cgColor
+            ? NSColor.controlBackgroundColor.cgColor
             : NSColor.clear.cgColor
         titleLabel.textColor = isActive ? .labelColor : .secondaryLabelColor
         layer?.cornerRadius = 4

@@ -68,7 +68,7 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         wv.navigationDelegate = self
         wv.uiDelegate = self
         wv.wantsLayer = true
-        wv.layer?.backgroundColor = NSColor.black.cgColor
+        wv.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
         wv.registerForDraggedTypes([.fileURL])
         wv.onFileDrop = { urls in
             for url in urls {

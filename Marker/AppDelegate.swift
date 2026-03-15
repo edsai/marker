@@ -198,11 +198,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
         case "Light":
             resolvedTheme = "light"
         default:
-            // System — check current appearance
             let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             resolvedTheme = isDark ? "dark" : "light"
         }
+
+        // Apply to JS editor
         windowController.editorVC?.bridge.setTheme(resolvedTheme)
+
+        // Apply to native UI
+        let appearance = resolvedTheme == "dark" ? NSAppearance(named: .darkAqua) : NSAppearance(named: .aqua)
+        windowController.window?.appearance = appearance
     }
 
     private func restoreSession() {

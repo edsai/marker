@@ -23,7 +23,7 @@ class StatusBarView: NSView {
 
     private func setupViews() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1.0).cgColor
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
         let labels = [filePathLabel, cursorLabel, encodingLabel, lineEndingLabel, wordCountLabel]
         for label in labels {

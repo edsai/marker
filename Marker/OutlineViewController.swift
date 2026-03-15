@@ -16,7 +16,7 @@ class OutlineViewController: NSViewController, NSOutlineViewDataSource, NSOutlin
     override func loadView() {
         let container = NSView()
         container.wantsLayer = true
-        container.layer?.backgroundColor = NSColor(red: 0.13, green: 0.13, blue: 0.13, alpha: 1.0).cgColor
+        container.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
 
         outlineView = NSOutlineView()
         outlineView.headerView = nil

@@ -9,17 +9,23 @@
 /* Begin PBXBuildFile section */
 		0B1C47E0271C39F491582413 /* TabManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68305DCB6293C4D86CCCF1CE /* TabManagerTests.swift */; };
 		1224E51E32C936CD58B63104 /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAA735FBB2A846ADA887D67 /* TabBarView.swift */; };
+		1CA561A8833ACFE686AE0EBD /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F83D00057E151D58E39F11A /* PreferencesWindowController.swift */; };
+		2C3D1AC8A06EE3610C465D83 /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6FE691D980EDD395DCAF205 /* FileWatcher.swift */; };
 		38930523DDB89E9F3D6D3059 /* TabManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05476AB22007C99513939FD /* TabManager.swift */; };
+		45DFD1B1E20272264A65B545 /* FileIOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE7B0FE98BBD5C048CB8EAD /* FileIOTests.swift */; };
 		751B52DD314B20E8FBDBFB58 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFE00314F636B96E041D69FD /* main.swift */; };
 		8A7DD86BC6697B65E4C16F94 /* MarkerBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11149E741A68525959D31440 /* MarkerBridge.swift */; };
 		A12E189F5368CC47B9734A5A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1BEDC717D9BBACECB8D5EF /* MainWindowController.swift */; };
 		A894FD4EE843FF9EE3EC1464 /* FileTreeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B778882F87AE121D2DE618 /* FileTreeViewController.swift */; };
+		B29553E1B1238006B7D4D5CF /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4195D7BAABE0197C72922E81 /* StatusBarView.swift */; };
 		B3DE63FFBA80008B20C68B26 /* OutlineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF3996B75AAB6A48876833A7 /* OutlineViewController.swift */; };
-		C008BD2CBAF832774EEDCBB8 /* SidebarPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 770DC80183730C723FA985CF /* SidebarPlaceholderView.swift */; };
+		B8FA94ACA7EA582AF70E9997 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 621B1986DE69B991095ABBCF /* SessionManager.swift */; };
 		CDEE81672D3C69789455BAE2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 927203E14146C707ED6DF35B /* AppDelegate.swift */; };
+		CFD4FEE630E35FB2AABF412D /* FileIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36EA6483BD202F2B736B2516 /* FileIO.swift */; };
 		F17BAF3EB7AB8754D2D13B00 /* EditorWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A178DBEEE70C788A5E79B /* EditorWebViewController.swift */; };
 		F3EA349A8A8E5210525F8AD6 /* FileNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2BEAFA38CF33208623EEFC /* FileNode.swift */; };
 		F7245FE7EAD1A6FD3FCBA93C /* MarkerSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D753F171491B7686CAE32385 /* MarkerSchemeHandler.swift */; };
+		FD2371A82E607BA807130CFF /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB663D19559576E7C692166 /* MenuBuilder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,13 +41,18 @@
 /* Begin PBXFileReference section */
 		11149E741A68525959D31440 /* MarkerBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkerBridge.swift; sourceTree = "<group>"; };
 		2B2BEAFA38CF33208623EEFC /* FileNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileNode.swift; sourceTree = "<group>"; };
+		36EA6483BD202F2B736B2516 /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIO.swift; sourceTree = "<group>"; };
+		4195D7BAABE0197C72922E81 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
 		492A178DBEEE70C788A5E79B /* EditorWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebViewController.swift; sourceTree = "<group>"; };
+		4EE7B0FE98BBD5C048CB8EAD /* FileIOTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIOTests.swift; sourceTree = "<group>"; };
 		5C1BEDC717D9BBACECB8D5EF /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		621B1986DE69B991095ABBCF /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		624E30132E40B5140B80FD2E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		68305DCB6293C4D86CCCF1CE /* TabManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerTests.swift; sourceTree = "<group>"; };
 		6E59A6366F9B55652046DEE9 /* Marker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71055F046DFB8EE9DC994F43 /* Marker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Marker.entitlements; sourceTree = "<group>"; };
-		770DC80183730C723FA985CF /* SidebarPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarPlaceholderView.swift; sourceTree = "<group>"; };
+		7CB663D19559576E7C692166 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
+		7F83D00057E151D58E39F11A /* PreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesWindowController.swift; sourceTree = "<group>"; };
 		90B778882F87AE121D2DE618 /* FileTreeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTreeViewController.swift; sourceTree = "<group>"; };
 		927203E14146C707ED6DF35B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B05476AB22007C99513939FD /* TabManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManager.swift; sourceTree = "<group>"; };
@@ -50,6 +61,7 @@
 		D753F171491B7686CAE32385 /* MarkerSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkerSchemeHandler.swift; sourceTree = "<group>"; };
 		DF3996B75AAB6A48876833A7 /* OutlineViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineViewController.swift; sourceTree = "<group>"; };
 		DFE00314F636B96E041D69FD /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		F6FE691D980EDD395DCAF205 /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -58,16 +70,21 @@
 			children = (
 				927203E14146C707ED6DF35B /* AppDelegate.swift */,
 				492A178DBEEE70C788A5E79B /* EditorWebViewController.swift */,
+				36EA6483BD202F2B736B2516 /* FileIO.swift */,
 				2B2BEAFA38CF33208623EEFC /* FileNode.swift */,
 				90B778882F87AE121D2DE618 /* FileTreeViewController.swift */,
+				F6FE691D980EDD395DCAF205 /* FileWatcher.swift */,
 				624E30132E40B5140B80FD2E /* Info.plist */,
 				DFE00314F636B96E041D69FD /* main.swift */,
 				5C1BEDC717D9BBACECB8D5EF /* MainWindowController.swift */,
 				71055F046DFB8EE9DC994F43 /* Marker.entitlements */,
 				11149E741A68525959D31440 /* MarkerBridge.swift */,
 				D753F171491B7686CAE32385 /* MarkerSchemeHandler.swift */,
+				7CB663D19559576E7C692166 /* MenuBuilder.swift */,
 				DF3996B75AAB6A48876833A7 /* OutlineViewController.swift */,
-				770DC80183730C723FA985CF /* SidebarPlaceholderView.swift */,
+				7F83D00057E151D58E39F11A /* PreferencesWindowController.swift */,
+				621B1986DE69B991095ABBCF /* SessionManager.swift */,
+				4195D7BAABE0197C72922E81 /* StatusBarView.swift */,
 				BAAA735FBB2A846ADA887D67 /* TabBarView.swift */,
 				B05476AB22007C99513939FD /* TabManager.swift */,
 			);
@@ -77,6 +94,7 @@
 		8A911A771700584D35AA7FD8 /* MarkerTests */ = {
 			isa = PBXGroup;
 			children = (
+				4EE7B0FE98BBD5C048CB8EAD /* FileIOTests.swift */,
 				68305DCB6293C4D86CCCF1CE /* TabManagerTests.swift */,
 			);
 			path = MarkerTests;
@@ -202,13 +220,18 @@
 			files = (
 				CDEE81672D3C69789455BAE2 /* AppDelegate.swift in Sources */,
 				F17BAF3EB7AB8754D2D13B00 /* EditorWebViewController.swift in Sources */,
+				CFD4FEE630E35FB2AABF412D /* FileIO.swift in Sources */,
 				F3EA349A8A8E5210525F8AD6 /* FileNode.swift in Sources */,
 				A894FD4EE843FF9EE3EC1464 /* FileTreeViewController.swift in Sources */,
+				2C3D1AC8A06EE3610C465D83 /* FileWatcher.swift in Sources */,
 				A12E189F5368CC47B9734A5A /* MainWindowController.swift in Sources */,
 				8A7DD86BC6697B65E4C16F94 /* MarkerBridge.swift in Sources */,
 				F7245FE7EAD1A6FD3FCBA93C /* MarkerSchemeHandler.swift in Sources */,
+				FD2371A82E607BA807130CFF /* MenuBuilder.swift in Sources */,
 				B3DE63FFBA80008B20C68B26 /* OutlineViewController.swift in Sources */,
-				C008BD2CBAF832774EEDCBB8 /* SidebarPlaceholderView.swift in Sources */,
+				1CA561A8833ACFE686AE0EBD /* PreferencesWindowController.swift in Sources */,
+				B8FA94ACA7EA582AF70E9997 /* SessionManager.swift in Sources */,
+				B29553E1B1238006B7D4D5CF /* StatusBarView.swift in Sources */,
 				1224E51E32C936CD58B63104 /* TabBarView.swift in Sources */,
 				38930523DDB89E9F3D6D3059 /* TabManager.swift in Sources */,
 				751B52DD314B20E8FBDBFB58 /* main.swift in Sources */,
@@ -219,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45DFD1B1E20272264A65B545 /* FileIOTests.swift in Sources */,
 				0B1C47E0271C39F491582413 /* TabManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
