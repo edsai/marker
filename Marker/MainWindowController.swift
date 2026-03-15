@@ -255,9 +255,13 @@ extension MainWindowController: TabManagerDelegate {
     func tabManager(_ manager: TabManager, didSwitchTo tab: Tab) {
         tabBarView.setActiveTab(id: tab.id)
 
-        // Pass file content in case the tab was evicted from the JS pool
+        // Pass file content in case the tab was evicted from the JS pool.
+        // Check evicted cache first (handles unsaved/untitled tabs with no file path),
+        // then fall back to reading from disk.
         let content: String
-        if let path = tab.filePath, let fileContent = try? FileIO.readFile(at: path) {
+        if let cached = (NSApp.delegate as? AppDelegate)?.consumeEvictedContent(for: tab.id) {
+            content = cached
+        } else if let path = tab.filePath, let fileContent = try? FileIO.readFile(at: path) {
             let dirPath = (path as NSString).deletingLastPathComponent
             content = AppDelegate.resolveImagePaths(in: fileContent.content, baseDir: dirPath)
         } else {
@@ -304,6 +308,7 @@ extension MainWindowController: TabManagerDelegate {
     func tabManager(_ manager: TabManager, didClose tab: Tab) {
         tabBarView.removeTab(id: tab.id)
         editorVC?.bridge.closeTab(id: tab.id)
+        (NSApp.delegate as? AppDelegate)?.clearEvictedContent(for: tab.id)
     }
 
     func tabManager(_ manager: TabManager, didAdd tab: Tab) {

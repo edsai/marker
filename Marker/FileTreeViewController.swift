@@ -58,6 +58,8 @@ class FileTreeViewController: NSViewController, NSOutlineViewDataSource, NSOutli
 
         // Context menu
         let menu = NSMenu()
+        menu.addItem(withTitle: "New File…", action: #selector(newFile), keyEquivalent: "")
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(withTitle: "Reveal in Finder", action: #selector(revealInFinder), keyEquivalent: "")
         menu.addItem(withTitle: "Copy Path", action: #selector(copyPath), keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
@@ -83,6 +85,59 @@ class FileTreeViewController: NSViewController, NSOutlineViewDataSource, NSOutli
         } else if node.isMarkdown {
             delegate?.fileTree(didSelectFile: node.url)
         }
+    }
+
+    @objc private func newFile() {
+        // Determine target directory
+        let targetDir: URL
+        if let node = selectedNode() {
+            targetDir = node.isDirectory ? node.url : node.url.deletingLastPathComponent()
+        } else if let root = rootURL {
+            targetDir = root
+        } else {
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "New File"
+        alert.informativeText = "Enter filename:"
+        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        input.stringValue = "untitled.md"
+        alert.accessoryView = input
+        alert.addButton(withTitle: "Create")
+        alert.addButton(withTitle: "Cancel")
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let filename = input.stringValue.trimmingCharacters(in: .whitespaces)
+        guard !filename.isEmpty else { return }
+
+        let fileURL = targetDir.appendingPathComponent(filename)
+
+        // Don't overwrite existing files
+        guard !FileManager.default.fileExists(atPath: fileURL.path) else {
+            let errorAlert = NSAlert()
+            errorAlert.messageText = "File already exists"
+            errorAlert.informativeText = filename
+            errorAlert.runModal()
+            return
+        }
+
+        // Create empty file
+        FileManager.default.createFile(atPath: fileURL.path, contents: nil)
+
+        // Refresh the tree
+        if let parent = selectedNode(), parent.isDirectory {
+            parent.children = nil
+            parent.loadChildren()
+            outlineView.reloadItem(parent, reloadChildren: true)
+        } else {
+            rootNode?.children = nil
+            rootNode?.loadChildren()
+            outlineView.reloadData()
+        }
+
+        // Open the new file
+        delegate?.fileTree(didSelectFile: fileURL)
     }
 
     @objc private func revealInFinder() {

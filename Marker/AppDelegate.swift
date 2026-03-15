@@ -6,6 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     private var bridgeReady = false
     private var preferencesController: PreferencesWindowController?
     private var autoSaveTimer: Timer?
+    private var evictedContent: [String: String] = [:]
 
     // MARK: - Recent Files
 
@@ -398,8 +399,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
     }
 
     func editor(didEvictTab tabId: String, markdown: String) {
-        // Used by B9 (session persistence) — log for now
-        NSLog("Marker: tab \(tabId) evicted from pool")
+        NSLog("Marker: tab \(tabId) evicted from pool, caching content")
+        evictedContent[tabId] = markdown
+    }
+
+    /// Returns and removes cached content for an evicted tab.
+    func consumeEvictedContent(for tabId: String) -> String? {
+        return evictedContent.removeValue(forKey: tabId)
+    }
+
+    /// Clears cached content for a closed tab to prevent memory growth.
+    func clearEvictedContent(for tabId: String) {
+        evictedContent.removeValue(forKey: tabId)
     }
 
     func editor(didPasteImage tabId: String, base64: String, fileExtension: String) {
