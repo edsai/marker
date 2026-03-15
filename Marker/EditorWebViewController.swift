@@ -18,6 +18,7 @@ class EditorWebViewController: NSViewController, WKNavigationDelegate {
 
     override func loadView() {
         let config = WKWebViewConfiguration()
+        config.setURLSchemeHandler(MarkerSchemeHandler(), forURLScheme: "marker-file")
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
         let contentController = WKUserContentController()
 

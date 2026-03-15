@@ -43,11 +43,59 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
               let content = String(data: data, encoding: .utf8) else { return }
         let tabId = "tab-\(Int(Date().timeIntervalSince1970 * 1000))"
         let title = (path as NSString).lastPathComponent
+        let dirPath = (path as NSString).deletingLastPathComponent
 
-        windowController.editorVC?.bridge.openTab(id: tabId, content: content) { [weak self] success in
+        // Transform relative image paths to marker-file:// absolute URLs
+        let resolved = Self.resolveImagePaths(in: content, baseDir: dirPath)
+
+        windowController.editorVC?.bridge.openTab(id: tabId, content: resolved) { [weak self] success in
             guard success else { return }
             self?.windowController.tabManager.addTab(id: tabId, title: title, filePath: path)
         }
+    }
+
+    /// Resolve relative image paths in markdown to marker-file:// absolute URLs.
+    /// Handles: ![alt](./path), ![alt](../path), ![alt](relative/path)
+    /// Skips: ![alt](https://...), ![alt](data:...), ![alt](marker-file://...), ![alt](/absolute/path)
+    static func resolveImagePaths(in markdown: String, baseDir: String) -> String {
+        // Match markdown image syntax: ![...](path)
+        let pattern = #"!\[([^\]]*)\]\(([^)]+)\)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return markdown }
+
+        var result = markdown
+        let matches = regex.matches(in: markdown, range: NSRange(markdown.startIndex..., in: markdown))
+
+        // Process in reverse so ranges stay valid
+        for match in matches.reversed() {
+            guard let pathRange = Range(match.range(at: 2), in: markdown) else { continue }
+            let imagePath = String(markdown[pathRange])
+
+            // Skip absolute URLs, data URIs, and already-resolved paths
+            if imagePath.hasPrefix("http://") || imagePath.hasPrefix("https://") ||
+               imagePath.hasPrefix("data:") || imagePath.hasPrefix("marker-file://") ||
+               imagePath.hasPrefix("blob:") {
+                continue
+            }
+
+            // Resolve relative path against document directory
+            let absolutePath: String
+            if imagePath.hasPrefix("/") {
+                absolutePath = imagePath
+            } else {
+                absolutePath = (baseDir as NSString).appendingPathComponent(imagePath)
+            }
+
+            // Standardize the path (resolve ../ etc.)
+            let standardized = (absolutePath as NSString).standardizingPath
+            let markerURL = "marker-file://\(standardized)"
+
+            // Replace in result
+            let fullMatchRange = Range(match.range, in: result)!
+            let alt = match.range(at: 1)
+            let altText = String(result[Range(alt, in: result)!])
+            result.replaceSubrange(fullMatchRange, with: "![\(altText)](\(markerURL))")
+        }
+        return result
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
