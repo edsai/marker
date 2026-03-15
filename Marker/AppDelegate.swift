@@ -61,6 +61,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
         }
     }
 
+    func reloadTab(id: String, path: String) {
+        let fileContent: FileContent
+        do {
+            fileContent = try FileIO.readFile(at: path)
+        } catch {
+            NSLog("Marker: Failed to reload file: \(error)")
+            return
+        }
+
+        let dirPath = (path as NSString).deletingLastPathComponent
+        let resolved = Self.resolveImagePaths(in: fileContent.content, baseDir: dirPath)
+
+        // Re-open the tab with fresh content (openTab on an existing tab replaces content)
+        windowController.editorVC?.bridge.openTab(id: id, content: resolved)
+        windowController.tabManager.setDirty(id: id, isDirty: false)
+    }
+
     /// Resolve relative image paths in markdown to marker-file:// absolute URLs.
     /// Handles: ![alt](./path), ![alt](../path), ![alt](relative/path)
     /// Skips: ![alt](https://...), ![alt](data:...), ![alt](marker-file://...), ![alt](/absolute/path)

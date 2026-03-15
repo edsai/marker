@@ -3,6 +3,7 @@ import Cocoa
 class MainWindowController: NSWindowController, NSSplitViewDelegate {
     let tabManager = TabManager()
     let tabBarView = TabBarView()
+    let fileWatcher = FileWatcher()
     private let splitView = NSSplitView()
     let fileTreeVC = FileTreeViewController()
     let centerContainer = NSView()  // Public for B3 webview swap
@@ -113,6 +114,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
         tabBarView.delegate = self
         tabManager.delegate = self
         fileTreeVC.delegate = self
+        fileWatcher.delegate = self
     }
 
     // MARK: - Public API
@@ -144,6 +146,7 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
         panel.beginSheetModal(for: window!) { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
             self?.fileTreeVC.rootURL = url
+            self?.fileWatcher.watch(directory: url)
             self?.window?.title = "Marker — \(url.lastPathComponent)"
         }
     }
@@ -224,6 +227,25 @@ extension MainWindowController: TabManagerDelegate {
         tabBarView.updateDirty(id: tab.id, isDirty: tab.isDirty)
         // Refresh outline when content changes
         outlineVC.refreshHeadings(webView: editorVC?.webView)
+    }
+}
+
+// MARK: - FileWatcherDelegate
+
+extension MainWindowController: FileWatcherDelegate {
+    func fileWatcher(_ watcher: FileWatcher, didDetectChangesAt paths: [String]) {
+        // Refresh file tree
+        if fileTreeVC.rootURL != nil {
+            fileTreeVC.rootURL = fileTreeVC.rootURL  // triggers reload
+        }
+
+        // Reload any open clean tabs whose files changed
+        for path in paths {
+            guard let tab = tabManager.tabByFilePath(path),
+                  !tab.isDirty else { continue }
+            // Re-read and update the tab content
+            (NSApp.delegate as? AppDelegate)?.reloadTab(id: tab.id, path: path)
+        }
     }
 }
 
