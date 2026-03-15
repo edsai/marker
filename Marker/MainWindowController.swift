@@ -1,5 +1,4 @@
 import Cocoa
-import WebKit
 
 class MainWindowController: NSWindowController, NSSplitViewDelegate {
     let tabManager = TabManager()
@@ -10,18 +9,21 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
     private let rightSidebar = SidebarPlaceholderView(title: "Outline")
     private let statusBar = NSTextField(labelWithString: "")
 
-    // WKWebView is passed in from AppDelegate (will be extracted to EditorWebViewController in B3)
-    var webView: WKWebView? {
+    // EditorWebViewController whose view is embedded in centerContainer.
+    // Note: Not added via addChild — NSWindowController is not NSViewController.
+    // VC lifecycle methods (viewWillAppear etc.) are not needed for this use case.
+    var editorVC: EditorWebViewController? {
         didSet {
-            oldValue?.removeFromSuperview()
-            guard let webView = webView else { return }
-            webView.translatesAutoresizingMaskIntoConstraints = false
-            centerContainer.addSubview(webView)
+            oldValue?.view.removeFromSuperview()
+            guard let editorVC = editorVC else { return }
+            let editorView = editorVC.view
+            editorView.translatesAutoresizingMaskIntoConstraints = false
+            centerContainer.addSubview(editorView)
             NSLayoutConstraint.activate([
-                webView.topAnchor.constraint(equalTo: centerContainer.topAnchor),
-                webView.bottomAnchor.constraint(equalTo: centerContainer.bottomAnchor),
-                webView.leadingAnchor.constraint(equalTo: centerContainer.leadingAnchor),
-                webView.trailingAnchor.constraint(equalTo: centerContainer.trailingAnchor),
+                editorView.topAnchor.constraint(equalTo: centerContainer.topAnchor),
+                editorView.bottomAnchor.constraint(equalTo: centerContainer.bottomAnchor),
+                editorView.leadingAnchor.constraint(equalTo: centerContainer.leadingAnchor),
+                editorView.trailingAnchor.constraint(equalTo: centerContainer.trailingAnchor),
             ])
         }
     }
@@ -120,6 +122,10 @@ class MainWindowController: NSWindowController, NSSplitViewDelegate {
 
     // MARK: - Public API
 
+    func updateCursorPosition(line: Int, col: Int) {
+        statusBar.stringValue = "  Ln \(line), Col \(col)"
+    }
+
     func toggleLeftSidebar() {
         let isCollapsed = splitView.isSubviewCollapsed(leftSidebar)
         splitView.setPosition(isCollapsed ? 220 : 0, ofDividerAt: 0)
@@ -169,16 +175,8 @@ extension MainWindowController: TabBarViewDelegate {
 
     func tabBarDidRequestNewTab() {
         let tabId = "tab-\(Int(Date().timeIntervalSince1970 * 1000))"
-        // Call JS first, register in Swift only on success
-        webView?.callAsyncJavaScript(
-            "await marker.openTab(tabId, content)",
-            arguments: ["tabId": tabId, "content": ""],
-            in: nil, in: .page
-        ) { [weak self] result in
-            if case .failure(let error) = result {
-                NSLog("Marker: failed to open new tab: \(error)")
-                return
-            }
+        editorVC?.bridge.openTab(id: tabId, content: "") { [weak self] success in
+            guard success else { return }
             self?.tabManager.addTab(id: tabId, title: "Untitled")
         }
     }
@@ -189,29 +187,12 @@ extension MainWindowController: TabBarViewDelegate {
 extension MainWindowController: TabManagerDelegate {
     func tabManager(_ manager: TabManager, didSwitchTo tab: Tab) {
         tabBarView.setActiveTab(id: tab.id)
-        // switchTab is idempotent in JS — calling it after openTab is safe (just re-shows the tab)
-        webView?.callAsyncJavaScript(
-            "await marker.switchTab(tabId, content)",
-            arguments: ["tabId": tab.id, "content": ""],
-            in: nil, in: .page
-        ) { result in
-            if case .failure(let error) = result {
-                NSLog("Marker: failed to switch tab: \(error)")
-            }
-        }
+        editorVC?.bridge.switchTab(id: tab.id)
     }
 
     func tabManager(_ manager: TabManager, didClose tab: Tab) {
         tabBarView.removeTab(id: tab.id)
-        webView?.callAsyncJavaScript(
-            "await marker.closeTab(tabId)",
-            arguments: ["tabId": tab.id],
-            in: nil, in: .page
-        ) { result in
-            if case .failure(let error) = result {
-                NSLog("Marker: failed to close tab: \(error)")
-            }
-        }
+        editorVC?.bridge.closeTab(id: tab.id)
     }
 
     func tabManager(_ manager: TabManager, didAdd tab: Tab) {
