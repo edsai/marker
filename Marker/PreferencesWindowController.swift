@@ -3,6 +3,7 @@ import Cocoa
 class PreferencesWindowController: NSWindowController {
     private let fontSizeField = NSTextField()
     private let fontFamilyPopup = NSPopUpButton()
+    private let themePopup = NSPopUpButton()
 
     convenience init() {
         let window = NSWindow(
@@ -50,6 +51,18 @@ class PreferencesWindowController: NSWindowController {
         sizeRow.addArrangedSubview(sizePx)
         stack.addArrangedSubview(sizeRow)
 
+        // Theme
+        let themeRow = NSStackView()
+        themeRow.orientation = .horizontal
+        themeRow.spacing = 8
+        let themeLabel = NSTextField(labelWithString: "Theme:")
+        themeLabel.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        themePopup.addItems(withTitles: ["System", "Dark", "Light"])
+        themePopup.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        themeRow.addArrangedSubview(themeLabel)
+        themeRow.addArrangedSubview(themePopup)
+        stack.addArrangedSubview(themeRow)
+
         // Font Family
         let familyRow = NSStackView()
         familyRow.orientation = .horizontal
@@ -76,6 +89,8 @@ class PreferencesWindowController: NSWindowController {
         fontSizeField.integerValue = defaults.integer(forKey: "editorFontSize") > 0 ? defaults.integer(forKey: "editorFontSize") : 16
         let family = defaults.string(forKey: "editorFontFamily") ?? "System Default"
         fontFamilyPopup.selectItem(withTitle: family)
+        let theme = defaults.string(forKey: "editorTheme") ?? "System"
+        themePopup.selectItem(withTitle: theme)
     }
 
     @objc private func applyPreferences() {
@@ -83,8 +98,11 @@ class PreferencesWindowController: NSWindowController {
         let fontSize = fontSizeField.integerValue > 0 ? fontSizeField.integerValue : 16
         let fontFamily = fontFamilyPopup.titleOfSelectedItem ?? "System Default"
 
+        let theme = themePopup.titleOfSelectedItem ?? "System"
+
         defaults.set(fontSize, forKey: "editorFontSize")
         defaults.set(fontFamily, forKey: "editorFontFamily")
+        defaults.set(theme, forKey: "editorTheme")
 
         // Apply to editor via bridge
         if let appDelegate = NSApp.delegate as? AppDelegate {
@@ -92,6 +110,7 @@ class PreferencesWindowController: NSWindowController {
             if fontFamily != "System Default" {
                 appDelegate.windowController.editorVC?.bridge.setFontFamily(fontFamily)
             }
+            appDelegate.applyTheme(theme)
         }
     }
 }

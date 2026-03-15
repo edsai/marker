@@ -190,6 +190,38 @@ extension MainWindowController: TabBarViewDelegate {
     }
 
     func tabBarDidCloseTab(id: String) {
+        confirmCloseTab(id: id)
+    }
+
+    func confirmCloseTab(id: String) {
+        guard let tab = tabManager.tab(for: id) else { return }
+
+        if tab.isDirty {
+            let alert = NSAlert()
+            alert.messageText = "Save changes to \"\(tab.title)\"?"
+            alert.informativeText = "Your changes will be lost if you don't save them."
+            alert.addButton(withTitle: "Save")
+            alert.addButton(withTitle: "Don't Save")
+            alert.addButton(withTitle: "Cancel")
+            alert.alertStyle = .warning
+
+            let response = alert.runModal()
+            switch response {
+            case .alertFirstButtonReturn:
+                // Save then close
+                (NSApp.delegate as? AppDelegate)?.saveAndCloseTab(id: id)
+                return
+            case .alertSecondButtonReturn:
+                // Don't save — close directly
+                break
+            case .alertThirdButtonReturn:
+                // Cancel — do nothing
+                return
+            default:
+                return
+            }
+        }
+
         tabManager.closeTab(id: id)
     }
 

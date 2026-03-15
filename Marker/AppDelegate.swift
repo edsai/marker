@@ -186,6 +186,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
         if !fontFamily.isEmpty && fontFamily != "System Default" {
             windowController.editorVC?.bridge.setFontFamily(fontFamily)
         }
+        let theme = defaults.string(forKey: "editorTheme") ?? "System"
+        applyTheme(theme)
+    }
+
+    func applyTheme(_ theme: String) {
+        let resolvedTheme: String
+        switch theme {
+        case "Dark":
+            resolvedTheme = "dark"
+        case "Light":
+            resolvedTheme = "light"
+        default:
+            // System — check current appearance
+            let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            resolvedTheme = isDark ? "dark" : "light"
+        }
+        windowController.editorVC?.bridge.setTheme(resolvedTheme)
     }
 
     private func restoreSession() {
@@ -351,7 +368,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, EditorDelegate {
 
     @objc func closeCurrentTab() {
         guard let tab = windowController.tabManager.activeTab else { return }
-        windowController.tabManager.closeTab(id: tab.id)
+        windowController.confirmCloseTab(id: tab.id)
+    }
+
+    func saveAndCloseTab(id: String) {
+        guard let tab = windowController.tabManager.tab(for: id) else { return }
+
+        if let path = tab.filePath {
+            windowController.editorVC?.bridge.requestMarkdown(id: id) { [weak self] content in
+                guard let content = content else { return }
+                do {
+                    try FileIO.writeFile(at: path, content: content, encoding: .utf8, lineEnding: .lf)
+                    NSLog("Marker: saved \(path)")
+                } catch {
+                    NSLog("Marker: save failed: \(error)")
+                }
+                self?.windowController.tabManager.closeTab(id: id)
+            }
+        } else {
+            // Untitled tab — Save As dialog
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.init(filenameExtension: "md")!]
+            panel.nameFieldStringValue = tab.title
+
+            panel.beginSheetModal(for: windowController.window!) { [weak self] response in
+                guard response == .OK, let url = panel.url else { return }
+                self?.windowController.editorVC?.bridge.requestMarkdown(id: id) { content in
+                    guard let content = content else { return }
+                    do {
+                        try FileIO.writeFile(at: url.path, content: content, encoding: .utf8, lineEnding: .lf)
+                        NSLog("Marker: saved as \(url.path)")
+                    } catch {
+                        NSLog("Marker: save as failed: \(error)")
+                    }
+                    self?.windowController.tabManager.closeTab(id: id)
+                }
+            }
+        }
     }
 
     @objc func toggleSidebar() {
